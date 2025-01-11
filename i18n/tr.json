@@ -1,0 +1,7 @@
+{
+    "validation": {
+      "isString": "Verilen değer string olmalı",
+      "isEmail": "Değer düzgün bir mail olmalı"
+    }
+  }
+  

@@ -1,0 +1,7 @@
+{
+    "validation": {
+      "isString": "The value must be a string",
+      "isEmail": "The value must be a valid email"
+    }
+  }
+  

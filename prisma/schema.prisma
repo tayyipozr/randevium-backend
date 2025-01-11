@@ -1,0 +1,189 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String      @id @default(uuid()) @db.Uuid
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  email       String      @unique
+  phoneNumber String      @unique
+  hash        String
+  hashedRt    String?
+  firstName   String?
+  lastName    String?
+  gender      Boolean?
+  token       String?
+  images      UserImage[]
+
+  roleId String?
+  roles  Role[]
+
+  employee Employee?
+
+  @@map("users")
+}
+
+model Role {
+  id   String @id @default(uuid()) @db.Uuid
+  name String @unique
+
+  users User[]
+
+  @@map("roles")
+}
+
+model Category {
+  id     String          @id @default(uuid()) @db.Uuid
+  name   String          @unique
+  images CategoryImage[]
+
+  companies Company[]
+  services Service[]
+
+  @@map("categories")
+}
+
+model Company {
+  id          String @id @default(uuid()) @db.Uuid
+  name        String
+  phoneNumber String @unique
+
+  // Relations
+  images    CompanyImage[]
+  employees Employee[]
+
+  category Category[]
+
+  addressId String  @unique @db.Uuid
+  address   Address @relation(fields: [addressId], references: [id])
+
+  @@map("companies")
+}
+
+model Employee {
+  id          String @id @default(uuid()) @db.Uuid
+  description String @db.VarChar(150)
+
+  // Relations
+  images         EmployeeImage[]
+  serviceDetails ServiceDetails[]
+
+  companyId String  @db.Uuid
+  company   Company @relation(fields: [companyId], references: [id])
+
+  userId String @unique @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Service {
+  id   String @id @default(uuid()) @db.Uuid
+  name String @db.VarChar(50)
+
+  // Relations
+  category Category[]
+  details ServiceDetails[]
+  images  ServiceImage[]
+
+  @@map("services")
+}
+
+model ServiceDetails {
+  id          String  @id @default(uuid()) @db.Uuid
+  description String  @db.VarChar(150)
+  cost        Decimal
+  duration    Int     @db.SmallInt
+
+  // Relations
+  serviceId String  @db.Uuid
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  employeeId String   @db.Uuid
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  @@map("service_details")
+}
+
+model Address {
+  id      String @id @default(uuid()) @db.Uuid
+  city    String
+  region  String
+  address String
+
+  company Company?
+
+  @@map("addresses")
+}
+
+// Image models
+model UserImage {
+  id        String   @id @default(uuid()) @db.Uuid
+  imageUrl  String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_images")
+}
+
+model CompanyImage {
+  id        String   @id @default(uuid()) @db.Uuid
+  imageUrl  String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  companyId String  @db.Uuid
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("company_images")
+}
+
+model CategoryImage {
+  id        String   @id @default(uuid()) @db.Uuid
+  imageUrl  String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  categoryId String   @db.Uuid
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("category_images")
+}
+
+model EmployeeImage {
+  id        String   @id @default(uuid()) @db.Uuid
+  imageUrl  String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  employeeId String   @db.Uuid
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employee_images")
+}
+
+model ServiceImage {
+  id        String   @id @default(uuid()) @db.Uuid
+  imageUrl  String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  // Relations
+  serviceId String  @db.Uuid
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@map("service_images")
+}
