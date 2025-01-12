@@ -36,6 +36,64 @@ export class AppointmentDetailService {
         });
     }
 
+    async getByCompanyId(companyId: string) {
+        return await this.prisma.appointmentDetail.findMany({
+            where: {
+                serviceDetails: {
+                    some: {
+                        employee: {
+                            companyId
+                        }
+                    }
+                }
+            },
+            include: {
+                serviceDetails: {
+                    include: {
+                        employee: {
+                            select: {
+                                company: {
+                                    select: {
+                                        name: true,
+                                        phoneNumber: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    async getByEmployeeId(employeeId: string) {
+        return await this.prisma.appointmentDetail.findMany({
+            where: {
+                serviceDetails: {
+                    some: {
+                        employeeId
+                    }
+                }
+            },
+            include: {
+                serviceDetails: {
+                    include: {
+                        employee: {
+                            select: {
+                                company: {
+                                    select: {
+                                        name: true,
+                                        phoneNumber: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     async createAppointmentDetails(appointmentId: string, models: AppointmentDetailRequestModel[]): Promise<string[]> {
         let appointmentDetails: string[] = [];
         for (var i = 0; i < models.length; i++) {
