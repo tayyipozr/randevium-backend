@@ -5,7 +5,7 @@ import { EmployeeService } from './employee.service';
 import { EmployeeRequestModel, EmployeeUpdateModel } from './model';
 
 @Controller('employee')
-@Roles(Role.Admin)
+@Roles(Role.CompanyAdmin)
 export class EmployeeController {
     constructor(private employeeService: EmployeeService) { }
 

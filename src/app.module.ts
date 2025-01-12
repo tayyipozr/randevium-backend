@@ -7,17 +7,18 @@ import { APP_GUARD } from '@nestjs/core';
 import { AtGuard } from './auth/guard';
 import { RolesGuard } from './auth/guard/role.guard';
 import { CategoryModule } from './category/category.module';
-import { AppLogger, LoggerModule } from './utils';
 import { CompanyModule } from './company/company.module';
 import { ServiceModule } from './service/service.module';
 import { EmployeeModule } from './employee/employee.module';
 import { ServiceDetailsModule } from './service-details/service-details.module';
+import { AppointmentModule } from './appointment/appointment.module';
+import { AppointmentDetailModule } from './appointment-detail/appointment-detail.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
     isGlobal: true,
-  }), AuthModule, PrismaModule, CategoryModule, CompanyModule, ServiceModule, EmployeeModule, ServiceDetailsModule],
-  providers: [{ provide: APP_GUARD, useClass: AtGuard }, { provide: APP_GUARD, useClass: RolesGuard }],
+  }), AuthModule, PrismaModule, CategoryModule, CompanyModule, ServiceModule, EmployeeModule, ServiceDetailsModule, AppointmentModule, AppointmentDetailModule],
+  providers: [{ provide: APP_GUARD, useClass: AtGuard }, { provide: APP_GUARD, useClass: RolesGuard }]
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

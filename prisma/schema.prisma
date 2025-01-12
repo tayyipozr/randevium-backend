@@ -27,12 +27,11 @@ model User {
   token       String?
   images      UserImage[]
 
-  roleId String?
-  roles  Role[]
+  roles        Role[]
+  appointments Appointment[]
 
   employee Employee?
-
-  @@map("users")
+  Address  Address?
 }
 
 model Role {
@@ -40,8 +39,6 @@ model Role {
   name String @unique
 
   users User[]
-
-  @@map("roles")
 }
 
 model Category {
@@ -50,33 +47,33 @@ model Category {
   images CategoryImage[]
 
   companies Company[]
-  services Service[]
-
-  @@map("categories")
+  services  Service[]
 }
 
 model Company {
-  id          String @id @default(uuid()) @db.Uuid
+  id          String   @id @default(uuid()) @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   name        String
-  phoneNumber String @unique
+  phoneNumber String   @unique
 
   // Relations
+  companySettings CompanySettings?
+
   images    CompanyImage[]
   employees Employee[]
-
-  category Category[]
-
-  addressId String  @unique @db.Uuid
-  address   Address @relation(fields: [addressId], references: [id])
-
-  @@map("companies")
+  category  Category[]
 }
 
 model Employee {
-  id          String @id @default(uuid()) @db.Uuid
-  description String @db.VarChar(150)
+  id          String   @id @default(uuid()) @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  description String   @db.VarChar(150)
 
   // Relations
+  employeeSettings EmployeeSettings?
+
   images         EmployeeImage[]
   serviceDetails ServiceDetails[]
 
@@ -93,37 +90,104 @@ model Service {
 
   // Relations
   category Category[]
-  details ServiceDetails[]
-  images  ServiceImage[]
-
-  @@map("services")
+  details  ServiceDetails[]
+  images   ServiceImage[]
 }
 
 model ServiceDetails {
-  id          String  @id @default(uuid()) @db.Uuid
-  description String  @db.VarChar(150)
+  id          String   @id @default(uuid()) @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  description String   @db.VarChar(150)
   cost        Decimal
-  duration    Int     @db.SmallInt
+  duration    Int      @db.SmallInt
+  isRecurred  Boolean  @default(false)
 
   // Relations
   serviceId String  @db.Uuid
   service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
-  employeeId String   @db.Uuid
-  employee   Employee @relation(fields: [employeeId], references: [id])
-
-  @@map("service_details")
+  employeeId        String              @db.Uuid
+  employee          Employee            @relation(fields: [employeeId], references: [id])
+  AppointmentDetail AppointmentDetail[]
 }
 
 model Address {
-  id      String @id @default(uuid()) @db.Uuid
-  city    String
-  region  String
-  address String
+  id     String @id @default(uuid()) @db.Uuid
+  city   String
+  region String
 
-  company Company?
+  locationId String    @db.Uuid
+  Location   Location? @relation(fields: [locationId], references: [id], onDelete: Cascade)
 
-  @@map("addresses")
+  userId String @unique @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model WorkingCompanyDays {
+  id        String  @id @default(uuid()) @db.Uuid
+  day       String  @db.VarChar(1)
+  status    Boolean
+  startTime String  @db.VarChar(5)
+  endTime   String  @db.VarChar(5)
+
+  companySettings   CompanySettings @relation(fields: [companySettingsId], references: [id])
+  companySettingsId String          @db.Uuid
+}
+
+model WorkingEmployeeDays {
+  id        String  @id @default(uuid()) @db.Uuid
+  day       String  @db.VarChar(1)
+  status    Boolean
+  startTime String  @db.VarChar(5)
+  endTime   String  @db.VarChar(5)
+
+  employeeSettings   EmployeeSettings @relation(fields: [employeeSettingsId], references: [id])
+  employeeSettingsId String           @db.Uuid
+}
+
+model Appointment {
+  id                String   @id @default(uuid()) @db.Uuid
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  totalPrice        Decimal
+  totalDuration     Int      @db.SmallInt
+
+  users             User[]
+  appointmentDetail AppointmentDetail[]
+}
+
+model AppointmentDetail {
+  id                  String   @id @default(uuid()) @db.Uuid
+  appointmentStatus String   @db.VarChar(1)
+  appointmentDateTime DateTime
+
+  appointmentId String      @db.Uuid
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  serviceDetails ServiceDetails[]
+}
+
+// Settings models
+model CompanySettings {
+  id String @id @default(uuid()) @db.Uuid
+
+  companyId String  @unique @db.Uuid
+  company   Company @relation(fields: [companyId], references: [id])
+
+  companyAddress   CompanyAddress? @relation(fields: [companyAddressId], references: [id])
+  companyAddressId String?         @unique @db.Uuid
+
+  workingDays WorkingCompanyDays[]
+}
+
+model EmployeeSettings {
+  id String @id @default(uuid()) @db.Uuid
+
+  employeeId String   @unique @db.Uuid
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  workingDays WorkingEmployeeDays[]
 }
 
 // Image models
@@ -135,8 +199,6 @@ model UserImage {
 
   userId String @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("user_images")
 }
 
 model CompanyImage {
@@ -147,8 +209,6 @@ model CompanyImage {
 
   companyId String  @db.Uuid
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
-  @@map("company_images")
 }
 
 model CategoryImage {
@@ -159,8 +219,6 @@ model CategoryImage {
 
   categoryId String   @db.Uuid
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-  @@map("category_images")
 }
 
 model EmployeeImage {
@@ -171,8 +229,6 @@ model EmployeeImage {
 
   employeeId String   @db.Uuid
   employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-
-  @@map("employee_images")
 }
 
 model ServiceImage {
@@ -184,6 +240,51 @@ model ServiceImage {
   // Relations
   serviceId String  @db.Uuid
   service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+}
 
-  @@map("service_images")
+model CompanyAddress {
+  id         String    @id @default(uuid()) @db.Uuid
+  address    String    @db.VarChar(150)
+  countryId  String    @db.Uuid
+  country    Country   @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  cityId     String    @db.Uuid
+  city       City      @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  districtId String    @db.Uuid
+  district   District  @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  locationId String    @db.Uuid
+  location   Location? @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  companySettings CompanySettings?
+}
+
+model Country {
+  id        String           @id @default(uuid()) @db.Uuid
+  name      String           @unique @db.VarChar(10)
+  cities    City[]
+  addresses CompanyAddress[]
+}
+
+model City {
+  id        String           @id @default(uuid()) @db.Uuid
+  countryId String           @db.Uuid
+  country   Country          @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  name      String           @unique @db.VarChar(20)
+  districts District[]
+  adresses  CompanyAddress[]
+}
+
+model District {
+  id       String           @id @default(uuid()) @db.Uuid
+  name     String           @db.VarChar(50)
+  cityId   String           @db.Uuid
+  City     City             @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  adresses CompanyAddress[]
+}
+
+model Location {
+  id       String           @id @default(uuid()) @db.Uuid
+  lat      Float
+  lng      Float
+  adresses CompanyAddress[]
+  Address  Address[]
 }

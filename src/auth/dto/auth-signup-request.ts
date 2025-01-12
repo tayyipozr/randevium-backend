@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsEmail, IsNotEmpty, IsPhoneNumber, IsString } from "class-validator";
+import { IsBoolean, IsEmail, IsNotEmpty, IsPhoneNumber, IsString, Length } from "class-validator";
 
 export class AuthSignUpRequest {
   @IsEmail()
@@ -7,11 +7,12 @@ export class AuthSignUpRequest {
   @IsNotEmpty()
   @ApiProperty()
   email: string;
-  
-  @IsPhoneNumber()
+
   @IsString()
+  @Length(8, 15)
   @IsNotEmpty()
   @ApiProperty()
+  @IsPhoneNumber()
   phoneNumber: string;
 
   @IsString()

@@ -7,8 +7,8 @@ export class ServiceDetailsController {
     constructor(private serviceDetailsService: ServiceDetailsService) { }
 
     @Post()
-    createServiceDetails(@Body() model: ServiceDetailsRequestModel) {
-        return this.serviceDetailsService.createServiceDetails(model);
+    createServiceDetail(@Body() model: ServiceDetailsRequestModel) {
+        return this.serviceDetailsService.createServiceDetail(model);
     }
 
     @Get('employee/:employeeId')

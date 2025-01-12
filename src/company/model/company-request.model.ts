@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger"
-import { IsNotEmpty, IsOptional, IsString, IsUUID, Length } from "class-validator"
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsUUID, Length } from "class-validator"
 
 export class CompanyRequestModel {
     @IsString()
@@ -13,12 +13,9 @@ export class CompanyRequestModel {
     @ApiProperty()
     phoneNumber: string
 
-    @IsNotEmpty()
-    @IsUUID()
-    categoryId: string
-    
-    @IsNotEmpty()
     @IsOptional()
-    @IsUUID()
-    addressId: string 
+    @IsArray()
+    @IsUUID('4', { each: true })
+    @ApiProperty()
+    categoryIds?: string[];
 }

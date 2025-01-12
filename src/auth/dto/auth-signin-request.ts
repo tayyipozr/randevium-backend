@@ -1,11 +1,12 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsPhoneNumber, IsString } from "class-validator";
+import { IsNotEmpty, IsPhoneNumber, IsString, Length } from "class-validator";
 
 export class AuthSignInRequest {
-  @IsPhoneNumber()
   @IsString()
+  @Length(8, 15)
   @IsNotEmpty()
   @ApiProperty()
+  @IsPhoneNumber()
   phoneNumber: string;
 
   @IsString()

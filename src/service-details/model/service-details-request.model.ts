@@ -20,4 +20,4 @@ export class ServiceDetailsRequestModel {
     @IsUUID()
     @IsNotEmpty()
     serviceId: string;
-} 
+}
