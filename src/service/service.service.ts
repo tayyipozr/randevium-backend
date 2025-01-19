@@ -37,9 +37,7 @@ export class ServiceService {
     async updateService(id: string, model: ServiceUpdateModel) {
         return await this.prisma.service.update({
             where: { id },
-            data: {
-                name: model.name
-            }
+            data: model
         });
     }
 }

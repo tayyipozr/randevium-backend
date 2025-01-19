@@ -70,17 +70,14 @@ export class EmployeeService {
             }
         });
 
-        let serviceDetails: ServiceDetailsRequestModel[] = 
-            await this.serviceDetailsService.mapToEmployeeRequestToServiceDetails(model.serviceDetails, employee.id);
-
         await this.prisma.serviceDetails.createMany({
-            data: serviceDetails
+            data: model.serviceDetails
         });
 
         return employee;
     }
 
-    private maptoSingUpUserModel(userInfo: UserEmployeeRequestModel, password: string) : AuthSignUpRequest {
+    private maptoSingUpUserModel(userInfo: UserEmployeeRequestModel, password: string): AuthSignUpRequest {
         let singUpUser = new AuthSignUpRequest();
         singUpUser.email = userInfo.email;
         singUpUser.firstName = userInfo.firstName;
@@ -112,7 +109,6 @@ export class EmployeeService {
 
         if (model.description !== undefined) updateData.description = model.description;
         if (model.companyId !== undefined) updateData.companyId = model.companyId;
-        if (model.userId !== undefined) updateData.userId = model.userId;
 
         return await this.prisma.employee.update({
             where: {
@@ -120,8 +116,17 @@ export class EmployeeService {
             },
             data: updateData,
             include: {
-                user: true,
-                company: true
+                company: true,
+                user: {
+                    select: {
+                        id: true,
+                        email: true,
+                        firstName: true,
+                        lastName: true,
+                        createdAt: true,
+                        updatedAt: true,
+                    }
+                }
             }
         });
     }

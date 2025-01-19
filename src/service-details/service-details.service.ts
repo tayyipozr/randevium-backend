@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ServiceDetailsRequestModel } from './model/service-details-request.model';
-import { ServiceDetailsEmployeeRequestModel } from './model/service-details-employee-request.model';
+import { ServiceDetailsUpdateModel } from './model';
 
 @Injectable()
 export class ServiceDetailsService {
+  // Mapper for single service detail (with relations)
   constructor(private prisma: PrismaService) { }
 
   async createServiceDetail(model: ServiceDetailsRequestModel) {
@@ -30,25 +31,10 @@ export class ServiceDetailsService {
     });
   }
 
-  // Mapper for single service detail (with relations)
-  async mapToPrismaServiceDetail(data: ServiceDetailsEmployeeRequestModel, employeeId: string): Promise<ServiceDetailsRequestModel> {
-    return {
-      description: data.description,
-      cost: data.cost,
-      duration: data.duration,
-      serviceId: data.serviceId,
-      employeeId: employeeId
-    };
-  }
-
-  // Mapper for multiple service details (without relations for createMany)
-  async mapToEmployeeRequestToServiceDetails(data: ServiceDetailsEmployeeRequestModel[], employeeId: string): Promise<ServiceDetailsRequestModel[]> {
-    return data.map(item => ({
-      description: item.description,
-      cost: item.cost,
-      duration: item.duration,
-      serviceId: item.serviceId,
-      employeeId: employeeId
-    }));
+  async updateServiceDetail(id: string, model: ServiceDetailsUpdateModel) {
+    return await this.prisma.serviceDetails.update({
+      where: { id },
+      data: model
+    });
   }
 }

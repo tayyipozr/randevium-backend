@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, HttpException, Injectable } from '@nestjs/common';
 import { AppointmentRequestModel } from './model/appointment-request.model';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AppointmentStatus } from './enum';
 import { AppointmentDetailService } from 'src/appointment-detail/appointment-detail.service';
+import { checkIfAppointmentDateTimeAfterToday } from 'src/appointment-detail/business';
 
 @Injectable()
 export class AppointmentService {
@@ -13,14 +14,14 @@ export class AppointmentService {
     async getByUserId(userId: string) {
         return await this.prisma.appointment.findMany({
             where: {
-                AppointmentDetail: {
+                users: {
                     some: {
                         id: userId
                     }
                 }
             },
             include: {
-                AppointmentDetail: {
+                appointmentDetail: {
                     include: {
                         serviceDetails: true
                     }
@@ -32,7 +33,7 @@ export class AppointmentService {
     async getByCompanyId(companyId: string) {
         return await this.prisma.appointment.findMany({
             where: {
-                AppointmentDetail: {
+                appointmentDetail: {
                     some: {
                         serviceDetails: {
                             some: {
@@ -45,7 +46,7 @@ export class AppointmentService {
                 }
             },
             include: {
-                AppointmentDetail: {
+                appointmentDetail: {
                     include: {
                         serviceDetails: true
                     }
@@ -57,7 +58,7 @@ export class AppointmentService {
     async getByEmployeeId(employeeId: string) {
         return await this.prisma.appointment.findMany({
             where: {
-                AppointmentDetail: {
+                appointmentDetail: {
                     some: {
                         serviceDetails: {
                             some: {
@@ -68,7 +69,7 @@ export class AppointmentService {
                 }
             },
             include: {
-                AppointmentDetail: {
+                appointmentDetail: {
                     include: {
                         serviceDetails: true
                     }
@@ -78,12 +79,11 @@ export class AppointmentService {
     }
 
     async createAppointment(userId: string, appointmentRequestModel: AppointmentRequestModel) {
-        let status = AppointmentStatus.Pending;
-        let appointmentStatus = status.toString();
+        if (!appointmentRequestModel.appointmentDetails.every(e => checkIfAppointmentDateTimeAfterToday(e.appointmentDateTime)))
+            throw new ConflictException("Daha önceki tarihler için randevu oluşturulamaz.");
 
         const appointment = await this.prisma.appointment.create({
             data: {
-                appointmentStatus,
                 totalDuration: 0,
                 totalPrice: 0,
                 users: {

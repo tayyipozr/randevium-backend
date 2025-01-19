@@ -43,7 +43,7 @@ model Role {
 
 model Category {
   id     String          @id @default(uuid()) @db.Uuid
-  name   String          @unique
+  name   String          @unique @db.VarChar(40)
   images CategoryImage[]
 
   companies Company[]
@@ -54,8 +54,8 @@ model Company {
   id          String   @id @default(uuid()) @db.Uuid
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  name        String
-  phoneNumber String   @unique
+  name        String   @db.VarChar(40)
+  phoneNumber String   @unique @db.VarChar(15)
 
   // Relations
   companySettings CompanySettings?
@@ -110,6 +110,8 @@ model ServiceDetails {
   employeeId        String              @db.Uuid
   employee          Employee            @relation(fields: [employeeId], references: [id])
   AppointmentDetail AppointmentDetail[]
+
+  @@unique([serviceId, employeeId])
 }
 
 model Address {
@@ -147,11 +149,11 @@ model WorkingEmployeeDays {
 }
 
 model Appointment {
-  id                String   @id @default(uuid()) @db.Uuid
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  totalPrice        Decimal
-  totalDuration     Int      @db.SmallInt
+  id            String   @id @default(uuid()) @db.Uuid
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  totalPrice    Decimal
+  totalDuration Int      @db.SmallInt
 
   users             User[]
   appointmentDetail AppointmentDetail[]
@@ -159,7 +161,7 @@ model Appointment {
 
 model AppointmentDetail {
   id                  String   @id @default(uuid()) @db.Uuid
-  appointmentStatus String   @db.VarChar(1)
+  appointmentStatus   String   @default("0") @db.VarChar(1)
   appointmentDateTime DateTime
 
   appointmentId String      @db.Uuid

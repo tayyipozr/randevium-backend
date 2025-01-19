@@ -3,6 +3,7 @@ import { IsArray, IsNotEmpty, IsOptional, IsString, IsUUID, Length } from "class
 
 export class CompanyRequestModel {
     @IsString()
+    @Length(2, 40)
     @IsNotEmpty()
     @ApiProperty()
     name: string

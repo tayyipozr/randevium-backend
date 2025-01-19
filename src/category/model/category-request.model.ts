@@ -3,12 +3,12 @@ import { IsNotEmpty, IsOptional, IsString, Length } from "class-validator"
 
 export class CategoryRequestModel {
     @IsString()
+    @Length(2, 40)
     @IsNotEmpty()
     @ApiProperty()
     name: string
 
     @IsString()
-    @Length(10, 11)
     @IsNotEmpty()
     @ApiProperty()
     imageUrl: string

@@ -21,7 +21,7 @@ export class CategoryService {
         );
     }
 
-    async deleteCategory(id: string) {
+    async deleteCategory(id: string) {  
         return await this.prisma.category.delete({
             where: {
                 id: id

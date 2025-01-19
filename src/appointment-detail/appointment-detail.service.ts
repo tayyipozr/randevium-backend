@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AppointmentDetailRequestModel } from './model/appointment-detail-request-model';
+import { checkIfAppointmentDateTimeAfterToday } from './business/checkIfAppointmentDateTimeAfterToday';
 
 @Injectable()
 export class AppointmentDetailService {

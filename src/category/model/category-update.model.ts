@@ -3,13 +3,13 @@ import { IsOptional, IsString, Length } from "class-validator"
 
 export class CategoryUpdateModel {
     @IsOptional()
+    @Length(2, 40)
     @IsString()
     @ApiProperty()
     name?: string
     
     @IsOptional()
     @IsString()
-    @Length(10, 11)
     @ApiProperty()
     imageUrl?: string
 }

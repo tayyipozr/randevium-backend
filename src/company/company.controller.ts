@@ -8,6 +8,7 @@ import { Roles } from 'src/auth/decorator';
 @Controller('company')
 export class CompanyController {
     constructor(private companyService: CompanyService) { }
+
     @Get()
     getCompanies() {
         return this.companyService.getCompanies();
