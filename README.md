@@ -24,12 +24,30 @@ Randevium Backend is a comprehensive appointment management system built with Ne
 - PostgreSQL
 - JWT Authentication
 - Docker
+- Dragonfly (Redis-compatible in-memory cache)
+- Custom Logging System
 
 ## Features
 
 - Authentication with JWT (Access & Refresh tokens)
+  - Access token for API authentication (50m expiration)
+  - Refresh token with secure rotation (7-day expiration)
+  - Token blacklisting with Dragonfly cache
+  - Secure token rotation on refresh
+  - Protection against token reuse
 - Role-based authorization (Admin, CompanyAdmin, CompanyEmployee, User)
 - Database integration with Prisma ORM
+- Caching layer with Dragonfly
+  - Fast in-memory caching
+  - Support for string and JSON data
+  - Configurable TTL for cache entries
+  - Token blacklist management
+- Advanced Logging System
+  - Colorized console output
+  - Context-based logging
+  - Environment-aware logging levels
+  - ISO timestamp formatting
+  - Stack trace support for errors
 - Entity relationships:
   - Users & Roles (Many-to-Many)
   - Categories & Companies (Many-to-Many)
@@ -43,6 +61,7 @@ Randevium Backend is a comprehensive appointment management system built with Ne
 - Node.js (v18 or higher recommended)
 - Docker and Docker Compose
 - PostgreSQL
+- Dragonfly (Redis-compatible cache)
 
 ## Project Setup
 
@@ -57,18 +76,19 @@ Create a `.env` file in the root directory with:
 DATABASE_URL="postgresql://user:password@localhost:5432/db_name"
 JWT_AT_SECRET="your-access-token-secret"
 JWT_RT_SECRET="your-refresh-token-secret"
+DRAGONFLY_URL="redis://localhost:6379"
+NODE_ENV="development"  # Use "production" for production environment
 ```
 
-3. Database Setup:
+3. Docker Services:
 ```bash
-# Start PostgreSQL container
-$ npm run db:dev:up
+# Start all services
+$ docker-compose up -d
 
-# Apply migrations
-$ npm run prisma:dev:deploy
-
-# Seed the database
-$ npx prisma db seed
+# Services included:
+- PostgreSQL (dev-db)
+- PostgreSQL (test-db)
+- Dragonfly Cache Server
 ```
 
 ## Running the app
@@ -118,10 +138,63 @@ $ npm run test:cov
 ```
 src/
 ├── auth/                 # Authentication & authorization
+│   ├── strategy/        # JWT strategies (access & refresh)
+│   └── guard/           # Auth guards
+├── dragonfly/           # Caching service
 ├── prisma/              # Database schema and migrations
-├── utils/               # Shared utilities
+├── utils/
+│   └── logger/         # Custom logging service
 └── main.ts              # Application entry point
 ```
+
+## Authentication Flow
+
+1. Access Tokens (short-lived)
+   - 50-minute expiration
+   - JWT-based
+   - Used for API authentication
+
+2. Refresh Tokens (long-lived)
+   - 7-day expiration
+   - Secure rotation on each use
+   - Blacklisted after use
+   - Stored in Dragonfly cache
+
+3. Token Security
+   - Automatic token blacklisting
+   - Protection against token reuse
+   - Secure token rotation
+   - Cache-based token invalidation
+
+## Logging System
+
+The application includes a custom logging service with:
+
+- Log Levels:
+  - INFO: General application information
+  - ERROR: Application errors with stack traces
+  - WARN: Warning messages
+  - DEBUG: Development debugging (dev only)
+  - VERBOSE: Detailed information (dev only)
+
+- Features:
+  - Colorized console output
+  - Context-based logging
+  - ISO timestamp formatting
+  - Environment-aware logging
+  - Stack trace support for errors
+
+## Caching with Dragonfly
+
+The application uses Dragonfly as a Redis-compatible caching layer:
+
+- Fast in-memory caching
+- Support for string and JSON data
+- Configurable TTL for cache entries
+- Used for:
+  - Token blacklisting
+  - Frequently accessed data
+  - Session management
 
 ## API Documentation
 

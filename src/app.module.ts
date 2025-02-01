@@ -13,11 +13,12 @@ import { EmployeeModule } from './employee/employee.module';
 import { ServiceDetailsModule } from './service-details/service-details.module';
 import { AppointmentModule } from './appointment/appointment.module';
 import { AppointmentDetailModule } from './appointment-detail/appointment-detail.module';
+import { DragonflyModule } from './dragonfly/dragonfly.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
     isGlobal: true,
-  }), AuthModule, PrismaModule, CategoryModule, CompanyModule, ServiceModule, EmployeeModule, ServiceDetailsModule, AppointmentModule, AppointmentDetailModule],
+  }), AuthModule, PrismaModule, CategoryModule, CompanyModule, ServiceModule, EmployeeModule, ServiceDetailsModule, AppointmentModule, AppointmentDetailModule, DragonflyModule],
   providers: [{ provide: APP_GUARD, useClass: AtGuard }, { provide: APP_GUARD, useClass: RolesGuard }]
 })
 export class AppModule {
