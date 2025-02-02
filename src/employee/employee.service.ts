@@ -22,6 +22,7 @@ export class EmployeeService {
             },
             include: {
                 serviceDetails: true,
+                company: true,
                 user: {
                     select: {
                         id: true,
@@ -30,6 +31,8 @@ export class EmployeeService {
                         lastName: true,
                         createdAt: true,
                         updatedAt: true,
+                        images: true,
+
                     }
                 }
             }

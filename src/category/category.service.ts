@@ -7,7 +7,13 @@ export class CategoryService {
     constructor(private readonly prisma: PrismaService) { }
 
     async getCategories() {
-        return await this.prisma.category.findMany();
+        return await this.prisma.category.findMany(
+            {
+                include: {
+                    images: true,
+                }
+            }
+        );
     }
 
     async createCategories(model: CategoryRequestModel) {
@@ -21,7 +27,7 @@ export class CategoryService {
         );
     }
 
-    async deleteCategory(id: string) {  
+    async deleteCategory(id: string) {
         return await this.prisma.category.delete({
             where: {
                 id: id
