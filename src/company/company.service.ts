@@ -33,6 +33,7 @@ export class CompanyService {
                 category: true,
                 companySettings: {
                     include: {
+                        workingDays: true,
                         companyAddress: {
                             include: {
                                 city: true,

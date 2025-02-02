@@ -5,26 +5,35 @@ import { LoggerService } from 'src/utils';
 
 @Controller('appointment-detail')
 export class AppointmentDetailController {
-    constructor(
-        private readonly appointmentDetailService: AppointmentDetailService,
-        private readonly logger: LoggerService
-    ) { }
+  constructor(
+    private readonly appointmentDetailService: AppointmentDetailService,
+    private readonly logger: LoggerService,
+  ) {}
 
-    @Get('user')
-    async getByUserId(@GetUser('id') userId: string) {
-        this.logger.log(`User ${userId} requesting their appointment details`, 'AppointmentDetailController');
-        return await this.appointmentDetailService.getByUserId(userId);
-    }
+  @Get('user')
+  async getByUserId(@GetUser('id') userId: string) {
+    this.logger.log(
+      `User ${userId} requesting their appointment details`,
+      'AppointmentDetailController',
+    );
+    return await this.appointmentDetailService.getByUserId(userId);
+  }
 
-    @Get('company/:companyId')
-    async getByCompanyId(@Param('companyId') companyId: string) {
-        this.logger.log(`Fetching appointment details for company: ${companyId}`, 'AppointmentDetailController');
-        return await this.appointmentDetailService.getByCompanyId(companyId);
-    }
+  @Get('company/:companyId')
+  async getByCompanyId(@Param('companyId') companyId: string) {
+    this.logger.log(
+      `Fetching appointment details for company: ${companyId}`,
+      'AppointmentDetailController',
+    );
+    return await this.appointmentDetailService.getByCompanyId(companyId);
+  }
 
-    @Get('employee/:employeeId')
-    async getByEmployeeId(@Param('employeeId') employeeId: string) {
-        this.logger.log(`Fetching appointment details for employee: ${employeeId}`, 'AppointmentDetailController');
-        return await this.appointmentDetailService.getByEmployeeId(employeeId);
-    }
+  @Get('employee/:employeeId')
+  async getByEmployeeId(@Param('employeeId') employeeId: string) {
+    this.logger.log(
+      `Fetching appointment details for employee: ${employeeId}`,
+      'AppointmentDetailController',
+    );
+    return await this.appointmentDetailService.getByEmployeeId(employeeId);
+  }
 }
