@@ -5,6 +5,7 @@ yarn.lock
 
 # Environment
 .env
+/firebase
 .env.*
 !.env.example
 
@@ -66,3 +67,9 @@ Thumbs.db
 
 # Optional: Docker volumes
 docker-volumes/
+
+# Additional entries
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json

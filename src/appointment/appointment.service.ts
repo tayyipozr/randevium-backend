@@ -5,13 +5,15 @@ import { AppointmentStatus } from './enum';
 import { AppointmentDetailService } from 'src/appointment-detail/appointment-detail.service';
 import { checkIfAppointmentDateTimeAfterToday } from 'src/appointment-detail/business';
 import { LoggerService } from 'src/utils';
+import { FirebaseService } from 'src/firebase/firebase.service';
 
 @Injectable()
 export class AppointmentService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly appointmentDetailService: AppointmentDetailService,
-        private readonly logger: LoggerService
+        private readonly logger: LoggerService,
+        private readonly firebase: FirebaseService
     ) { }
 
     async getByUserId(userId: string) {
@@ -110,6 +112,7 @@ export class AppointmentService {
             );
 
             this.logger.log(`Successfully created appointment: ${appointment.id}`, 'AppointmentService');
+            this.firebase.sendNotification("doPL-EMZQjOz4V5dOkUfRh:APA91bGKct6lbaL-jceRw2bOWTNWEB5o07L1FQ1ff6cEfeL_t8HNHfnvO9dXpyfc-eiFuxUFcuP4gP3tOPNq5W4MLfjAA-6W5J5-OuIunEgZT-U6Xfci9Ws", "Randevium", "Randevunuz oluşturuldu");
             return appointment;
         } catch (error) {
             this.logger.error(
