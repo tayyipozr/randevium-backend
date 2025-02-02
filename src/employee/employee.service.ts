@@ -7,15 +7,19 @@ import { AuthSignUpRequest } from 'src/auth/dto';
 import { ServiceDetailsRequestModel } from 'src/service-details/model/service-details-request.model';
 import { Role } from 'src/auth/enum';
 import { ServiceDetailsService } from 'src/service-details/service-details.service';
+import { LoggerService } from 'src/utils';
 
 @Injectable()
 export class EmployeeService {
-    constructor(private readonly prisma: PrismaService,
+    constructor(
+        private readonly prisma: PrismaService,
         private readonly authService: AuthService,
-        private readonly serviceDetailsService: ServiceDetailsService
+        private readonly serviceDetailsService: ServiceDetailsService,
+        private readonly logger: LoggerService
     ) { }
 
     async getEmployees(companyId: string) {
+        this.logger.log(`Fetching employees for company: ${companyId}`, 'EmployeeService');
         return await this.prisma.employee.findMany({
             where: {
                 companyId
@@ -42,42 +46,51 @@ export class EmployeeService {
     //TODO: Write a function that returns code for signing up employee to company
 
     async createEmployee(model: EmployeeRequestModel) {
-        //TODO: Check if the code is correct before everything
-        let user = await this.getUser(model.user.phoneNumber);
+        this.logger.log(`Creating new employee for company: ${model.companyId}`, 'EmployeeService');
 
-        if (!user) {
-            const password = randomBytes(8).toString('base64').slice(0, 8);
-            let singUpUser = this.maptoSingUpUserModel(model.user, password);
-            await this.authService.signup(singUpUser);
-            user = await this.getUser(model.user.phoneNumber);
-            await this.prisma.user.update({
-                where: {
-                    id: user.id
-                },
-                data: {
-                    roles: {
-                        connect: {
-                            name: Role.CompanyEmployee
+        try {
+            let user = await this.getUser(model.user.phoneNumber);
+
+            if (!user) {
+                this.logger.log(`Creating new user for employee: ${model.user.phoneNumber}`, 'EmployeeService');
+                const password = randomBytes(8).toString('base64').slice(0, 8);
+                let singUpUser = this.maptoSingUpUserModel(model.user, password);
+                await this.authService.signup(singUpUser);
+                user = await this.getUser(model.user.phoneNumber);
+
+                await this.prisma.user.update({
+                    where: { id: user.id },
+                    data: {
+                        roles: {
+                            connect: { name: Role.CompanyEmployee }
                         }
                     }
+                });
+                this.logger.log(`User created and role assigned: ${user.id}`, 'EmployeeService');
+            }
+
+            const employee = await this.prisma.employee.create({
+                data: {
+                    description: model.description,
+                    companyId: model.companyId,
+                    userId: user.id
                 }
             });
-            //TODO: Check if user created and if created notify user added to company with sms and send user to password
+
+            await this.prisma.serviceDetails.createMany({
+                data: model.serviceDetails
+            });
+
+            this.logger.log(`Employee created successfully: ${employee.id}`, 'EmployeeService');
+            return employee;
+        } catch (error) {
+            this.logger.error(
+                `Failed to create employee for company: ${model.companyId}`,
+                error.stack,
+                'EmployeeService'
+            );
+            throw error;
         }
-
-        const employee = await this.prisma.employee.create({
-            data: {
-                description: model.description,
-                companyId: model.companyId,
-                userId: user.id
-            }
-        });
-
-        await this.prisma.serviceDetails.createMany({
-            data: model.serviceDetails
-        });
-
-        return employee;
     }
 
     private maptoSingUpUserModel(userInfo: UserEmployeeRequestModel, password: string): AuthSignUpRequest {
@@ -100,37 +113,53 @@ export class EmployeeService {
     }
 
     async deleteEmployee(id: string) {
-        return await this.prisma.employee.delete({
-            where: {
-                id
-            }
-        });
+        this.logger.log(`Deleting employee: ${id}`, 'EmployeeService');
+        try {
+            const result = await this.prisma.employee.delete({
+                where: {
+                    id
+                }
+            });
+            this.logger.log(`Employee deleted successfully: ${id}`, 'EmployeeService');
+            return result;
+        } catch (error) {
+            this.logger.error(`Failed to delete employee: ${id}`, error.stack, 'EmployeeService');
+            throw error;
+        }
     }
 
     async updateEmployee(id: string, model: EmployeeUpdateModel) {
-        const updateData: any = {};
+        this.logger.log(`Updating employee: ${id}`, 'EmployeeService');
+        try {
+            const updateData: any = {};
 
-        if (model.description !== undefined) updateData.description = model.description;
-        if (model.companyId !== undefined) updateData.companyId = model.companyId;
+            if (model.description !== undefined) updateData.description = model.description;
+            if (model.companyId !== undefined) updateData.companyId = model.companyId;
 
-        return await this.prisma.employee.update({
-            where: {
-                id: id
-            },
-            data: updateData,
-            include: {
-                company: true,
-                user: {
-                    select: {
-                        id: true,
-                        email: true,
-                        firstName: true,
-                        lastName: true,
-                        createdAt: true,
-                        updatedAt: true,
+            const result = await this.prisma.employee.update({
+                where: {
+                    id: id
+                },
+                data: updateData,
+                include: {
+                    company: true,
+                    user: {
+                        select: {
+                            id: true,
+                            email: true,
+                            firstName: true,
+                            lastName: true,
+                            createdAt: true,
+                            updatedAt: true,
+                        }
                     }
                 }
-            }
-        });
+            });
+            this.logger.log(`Employee updated successfully: ${id}`, 'EmployeeService');
+            return result;
+        } catch (error) {
+            this.logger.error(`Failed to update employee: ${id}`, error.stack, 'EmployeeService');
+            throw error;
+        }
     }
 }

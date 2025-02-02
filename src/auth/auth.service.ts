@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from "@nestjs/common";
+import { ForbiddenException, Injectable, UnauthorizedException, InternalServerErrorException } from "@nestjs/common";
 import * as argon from 'argon2';
 import { AuthSignInRequest, AuthSignUpRequest } from "./dto";
 import { JwtService } from "@nestjs/jwt";
@@ -6,20 +6,28 @@ import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../prisma/prisma.service";
 import { Tokens } from "./types";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { DragonflyService } from "src/dragonfly";
+import { LoggerService } from "../utils/logger/logger.service";
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
-    private readonly config: ConfigService) { }
+    private readonly config: ConfigService,
+    private readonly cache: DragonflyService,
+    private readonly logger: LoggerService) { }
 
   async signup(dto: AuthSignUpRequest): Promise<Tokens> {
     try {
       const hash = await argon.hash(dto.password);
 
-      const user = await this.prisma.user.create({ data: { email: dto.email, phoneNumber: dto.phoneNumber, 
-        firstName: dto.firstName, lastName: dto.lastName, gender: dto.gender, hash } });
+      const user = await this.prisma.user.create({
+        data: {
+          email: dto.email, phoneNumber: dto.phoneNumber,
+          firstName: dto.firstName, lastName: dto.lastName, gender: dto.gender, hash
+        }
+      });
 
       const tokens = await this.getTokens(user.id, user.email);
       await this.updateRtHash(user.id, tokens.refresh_token);
@@ -37,47 +45,66 @@ export class AuthService {
   }
 
   async signin(dto: AuthSignInRequest) {
+    this.logger.log(`Attempting sign in for user: ${dto.phoneNumber}`, 'AuthService');
     const user = await this.prisma.user.findUnique({
       where: { phoneNumber: dto.phoneNumber },
     });
 
-    if (!user)
+    if (!user) {
+      this.logger.error(`User not found: ${dto.phoneNumber}`, null, 'AuthService');
       throw new ForbiddenException('User not found');
-
+    }
 
     const valid = await argon.verify(user.hash, dto.password);
 
     if (!valid)
       throw new ForbiddenException('Invalid password');
 
-
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRtHash(user.id, tokens.refresh_token);
     return tokens;
   }
 
-  async signout(userId: string) {
-    await this.prisma.user.updateMany({
+  async signout(userId: string, access_token: string) {
+    this.logger.log(`Processing signout for user: ${userId}`, 'AuthService');
+
+    // Update user record
+    await this.prisma.user.update({
       where: { id: userId, hashedRt: { not: null } },
       data: { hashedRt: null },
     });
+
+    // Blacklist the current access token
+    if (access_token) {
+      await this.blacklistToken(access_token, 3600); // Blacklist for 1 hour
+      this.logger.log(`Access token blacklisted for user: ${userId}`, 'AuthService');
+    }
   }
 
   async refresh(userId: string, rt: string) {
+    this.logger.log(`Refreshing tokens for user: ${userId}`, 'AuthService');
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
 
-    if (!user)
-      throw new ForbiddenException('User not found');
+    if (!user || !user.hashedRt) {
+      this.logger.error(`Refresh failed for user: ${userId}`, null, 'AuthService');
+      throw new UnauthorizedException('Invalid refresh token');
+    }
 
-    const valid = await argon.verify(rt, user.hashedRt);
-
-    if (!valid)
-      throw new ForbiddenException('Invalid password');
+    const valid = await argon.verify(user.hashedRt, rt);
+    if (!valid) {
+      this.logger.warn(`Invalid refresh token used for user: ${userId}`, 'AuthService');
+      throw new ForbiddenException('Invalid refresh token');
+    }
 
     const tokens = await this.getTokens(user.id, user.phoneNumber);
     await this.updateRtHash(user.id, tokens.refresh_token);
+
+    // Blacklist the old refresh token
+    await this.blacklistToken(rt, 604800); // 7 days
+
     return tokens;
   }
 
@@ -106,7 +133,7 @@ export class AuthService {
   async getMe(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: { roles : true }
+      include: { roles: true }
     });
 
     delete user.hash;
@@ -114,5 +141,25 @@ export class AuthService {
     delete user.token;
 
     return user;
+  }
+
+  async blacklistToken(token: string, expiresIn: number) {
+    try {
+      await this.cache.setString(`bl_${token}`, 'blacklisted', expiresIn);
+      this.logger.log(`Token blacklisted successfully`, 'AuthService');
+    } catch (error) {
+      this.logger.error('Failed to blacklist token', error.stack, 'AuthService');
+      throw new InternalServerErrorException('Failed to blacklist token');
+    }
+  }
+
+  async isTokenBlacklisted(token: string): Promise<boolean> {
+    try {
+      const result = await this.cache.getString(`bl_${token}`);
+      return result === 'blacklisted';
+    } catch (error) {
+      this.logger.error('Error checking token blacklist', error.stack, 'AuthService');
+      return false;
+    }
   }
 }

@@ -2,12 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AppointmentDetailRequestModel } from './model/appointment-detail-request-model';
 import { checkIfAppointmentDateTimeAfterToday } from './business/checkIfAppointmentDateTimeAfterToday';
+import { LoggerService } from 'src/utils';
 
 @Injectable()
 export class AppointmentDetailService {
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly logger: LoggerService
+    ) { }
 
     async getByUserId(userId: string) {
+        this.logger.log(`Fetching appointment details for user: ${userId}`, 'AppointmentDetailService');
         return await this.prisma.appointmentDetail.findMany({
             where: {
                 appointment: {
@@ -96,24 +101,34 @@ export class AppointmentDetailService {
     }
 
     async createAppointmentDetails(appointmentId: string, models: AppointmentDetailRequestModel[]): Promise<string[]> {
-        let appointmentDetails: string[] = [];
-        for (var i = 0; i < models.length; i++) {
-            var appointmentDetail = await this.prisma.appointmentDetail.create({
-                data: {
-                    appointmentDateTime: models[i].appointmentDateTime,
-                    appointmentId: appointmentId,
-                    serviceDetails: {
-                        connect: models[i].serviceDetails.map(id => ({ id }))
+        this.logger.log(`Creating appointment details for appointment: ${appointmentId}`, 'AppointmentDetailService');
+
+        try {
+            let appointmentDetails: string[] = [];
+            for (var i = 0; i < models.length; i++) {
+                var appointmentDetail = await this.prisma.appointmentDetail.create({
+                    data: {
+                        appointmentDateTime: models[i].appointmentDateTime,
+                        appointmentId: appointmentId,
+                        serviceDetails: {
+                            connect: models[i].serviceDetails.map(id => ({ id }))
+                        }
                     }
-                }
-            });
-            appointmentDetails.push(appointmentDetail.id);
+                });
+                appointmentDetails.push(appointmentDetail.id);
+            }
+
+            this.logger.log(`Successfully created ${appointmentDetails.length} appointment details`, 'AppointmentDetailService');
+            return appointmentDetails;
+        } catch (error) {
+            this.logger.error(
+                `Failed to create appointment details for appointment: ${appointmentId}`,
+                error.stack,
+                'AppointmentDetailService'
+            );
+            throw error;
         }
-
-        return appointmentDetails;
     }
-
-
 
     private mapRequestModeltoPrismaModel(appointmentId: string, models: AppointmentDetailRequestModel[]) {
         return models.map(item =>

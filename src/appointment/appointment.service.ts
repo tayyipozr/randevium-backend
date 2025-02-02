@@ -4,14 +4,18 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { AppointmentStatus } from './enum';
 import { AppointmentDetailService } from 'src/appointment-detail/appointment-detail.service';
 import { checkIfAppointmentDateTimeAfterToday } from 'src/appointment-detail/business';
+import { LoggerService } from 'src/utils';
 
 @Injectable()
 export class AppointmentService {
-    constructor(private readonly prisma: PrismaService,
-        private readonly appointmentDetailService: AppointmentDetailService
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly appointmentDetailService: AppointmentDetailService,
+        private readonly logger: LoggerService
     ) { }
 
     async getByUserId(userId: string) {
+        this.logger.log(`Fetching appointments for user: ${userId}`, 'AppointmentService');
         return await this.prisma.appointment.findMany({
             where: {
                 users: {
@@ -31,6 +35,7 @@ export class AppointmentService {
     }
 
     async getByCompanyId(companyId: string) {
+        this.logger.log(`Fetching appointments for company: ${companyId}`, 'AppointmentService');
         return await this.prisma.appointment.findMany({
             where: {
                 appointmentDetail: {
@@ -79,25 +84,40 @@ export class AppointmentService {
     }
 
     async createAppointment(userId: string, appointmentRequestModel: AppointmentRequestModel) {
-        if (!appointmentRequestModel.appointmentDetails.every(e => checkIfAppointmentDateTimeAfterToday(e.appointmentDateTime)))
-            throw new ConflictException("Daha önceki tarihler için randevu oluşturulamaz.");
+        this.logger.log(`Creating new appointment for user: ${userId}`, 'AppointmentService');
 
-        const appointment = await this.prisma.appointment.create({
-            data: {
-                totalDuration: 0,
-                totalPrice: 0,
-                users: {
-                    connect: {
-                        id: userId
+        if (!appointmentRequestModel.appointmentDetails.every(e => checkIfAppointmentDateTimeAfterToday(e.appointmentDateTime))) {
+            this.logger.warn(`Invalid appointment date attempted for user: ${userId}`, 'AppointmentService');
+            throw new ConflictException("Daha önceki tarihler için randevu oluşturulamaz.");
+        }
+
+        try {
+            const appointment = await this.prisma.appointment.create({
+                data: {
+                    totalDuration: 0,
+                    totalPrice: 0,
+                    users: {
+                        connect: {
+                            id: userId
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        await this.appointmentDetailService.createAppointmentDetails(appointment.id,
-            appointmentRequestModel.appointmentDetails);
+            await this.appointmentDetailService.createAppointmentDetails(
+                appointment.id,
+                appointmentRequestModel.appointmentDetails
+            );
 
-
-        return appointment;
+            this.logger.log(`Successfully created appointment: ${appointment.id}`, 'AppointmentService');
+            return appointment;
+        } catch (error) {
+            this.logger.error(
+                `Failed to create appointment for user: ${userId}`,
+                error.stack,
+                'AppointmentService'
+            );
+            throw error;
+        }
     }
 }

@@ -22,5 +22,32 @@ services:
     networks:
       - randevium-net
 
+  dragonfly-cache:
+    image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
+    ulimits:
+      memlock: -1
+    container_name: dragonfly-server
+    environment:
+      - DRAGONFLY_PORT=65001
+      - DRAGONFLY_LOCAL_STORAGE=/data
+      - DRAGONFLY_MAXMEMORY=512mb
+      - DRAGONFLY_SNAPSHOT_CRON="0 * * * *"
+    ports:
+      - "6379:6379"
+    volumes:
+      - dragonflydata:/data
+    networks:
+      - randevium-net
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 networks:
   randevium-net:
+
+
+volumes:
+  dragonflydata:

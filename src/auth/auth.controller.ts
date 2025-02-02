@@ -1,36 +1,52 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, ParseIntPipe, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { Tokens } from "./types";
 import { AuthSignInRequest, AuthSignUpRequest } from "./dto";
-import { GetUser, Public, Roles } from "./decorator";
+import { GetUser, Public } from "./decorator";
 import { RtGuard } from "./guard";
+import { LoggerService } from "src/utils";
 
 @Controller('auth')
 export class AuthController {
-    constructor(private authService: AuthService) { }
+    constructor(
+        private authService: AuthService,
+        private readonly logger: LoggerService
+    ) { }
 
     @Public()
     @Post('signup')
-    signup(@Body() dto: AuthSignUpRequest): Promise<Tokens> {
-        return this.authService.signup(dto);
+    async signup(@Body() dto: AuthSignUpRequest): Promise<Tokens> {
+        this.logger.log('New user signup attempt', 'AuthController');
+        const tokens = await this.authService.signup(dto);
+        this.logger.log('User signup successful', 'AuthController');
+        return tokens;
     }
 
     @Public()
     @Post('signin')
     @HttpCode(HttpStatus.OK)
-    signin(@Body() dto: AuthSignInRequest): Promise<Tokens> {
-        return this.authService.signin(dto);
+    async signin(@Body() dto: AuthSignInRequest): Promise<Tokens> {
+        this.logger.log('User signin attempt', 'AuthController');
+        const tokens = await this.authService.signin(dto);
+        this.logger.log('User signin successful', 'AuthController');
+        return tokens;
     }
 
     @Post('signout')
     @HttpCode(HttpStatus.OK)
-    signout(@GetUser('id', ParseIntPipe) userId: string) {
-        return this.authService.signout(userId);
+    async signout(@GetUser('id') userId: string, @Req() req: Request) {
+        this.logger.log(`User ${userId} signout attempt`, 'AuthController');
+        const access_token = req.headers['authorization']?.split(' ')[1];
+        return this.authService.signout(userId, access_token);
     }
 
     @UseGuards(RtGuard)
     @Post('refresh')
-    refresh(@GetUser('id') userId: string, @GetUser('refreshToken') refreshToken: string) {
+    async refresh(
+        @GetUser('id') userId: string,
+        @Body('refresh_token') refreshToken: string
+    ) {
+        this.logger.log(`Token refresh attempt for user ${userId}`, 'AuthController');
         return this.authService.refresh(userId, refreshToken);
     }
 

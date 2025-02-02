@@ -1,27 +1,46 @@
-import { Injectable, LoggerService, LogLevel } from '@nestjs/common';
-import * as winston from 'winston';
+import { Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
 
 @Injectable()
-export class AppLogger implements LoggerService {
-    log(message: any, ...optionalParams: any[]) {
-        throw new Error('Method not implemented.');
+export class LoggerService implements NestLoggerService {
+    private getTimestamp(): string {
+        return new Date().toISOString();
     }
-    error(message: any, ...optionalParams: any[]) {
-        throw new Error('Method not implemented.');
+
+    private getColoredContext(context: string): string {
+        // Add ANSI color codes for consistent coloring
+        return `\x1B[33m[${context}]\x1B[0m`; // Yellow color for context
     }
-    warn(message: any, ...optionalParams: any[]) {
-        throw new Error('Method not implemented.');
+
+    private formatMessage(level: string, message: string, context?: string): string {
+        const timestamp = this.getTimestamp();
+        const contextStr = context ? this.getColoredContext(context) : '';
+        return `${timestamp} ${level} ${contextStr} ${message}`;
     }
-    debug?(message: any, ...optionalParams: any[]) {
-        throw new Error('Method not implemented.');
+
+    log(message: string, context?: string) {
+        console.log(this.formatMessage('\x1B[32mLOG\x1B[0m', message, context));
     }
-    verbose?(message: any, ...optionalParams: any[]) {
-        throw new Error('Method not implemented.');
+
+    error(message: string, trace?: string, context?: string) {
+        console.error(this.formatMessage('\x1B[31mERROR\x1B[0m', message, context));
+        if (trace) {
+            console.error('\x1B[31m', trace, '\x1B[0m');
+        }
     }
-    fatal?(message: any, ...optionalParams: any[]) {
-        throw new Error('Method not implemented.');
+
+    warn(message: string, context?: string) {
+        console.warn(this.formatMessage('\x1B[33mWARN\x1B[0m', message, context));
     }
-    setLogLevels?(levels: LogLevel[]) {
-        throw new Error('Method not implemented.');
+
+    debug(message: string, context?: string) {
+        if (process.env.NODE_ENV !== 'production') {
+            console.debug(this.formatMessage('\x1B[36mDEBUG\x1B[0m', message, context));
+        }
+    }
+
+    verbose(message: string, context?: string) {
+        if (process.env.NODE_ENV !== 'production') {
+            console.log(this.formatMessage('\x1B[34mVERBOSE\x1B[0m', message, context));
+        }
     }
 }
