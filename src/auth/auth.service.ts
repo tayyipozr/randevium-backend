@@ -133,7 +133,7 @@ export class AuthService {
   async getMe(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: { roles: true }
+      include: { roles: true, favoriteCompanies: true }
     });
 
     delete user.hash;

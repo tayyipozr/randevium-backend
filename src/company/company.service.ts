@@ -154,4 +154,15 @@ export class CompanyService {
 
         return company;
     }
+
+    async favoriteCompany(userId: string, companyId: string, isFavorite: boolean) {
+        return this.prisma.user.update({
+            where: { id: userId },
+            data: {
+                favoriteCompanies: isFavorite
+                    ? { connect: { id: companyId } } // Add user to company's fans list
+                    : { disconnect: { id: companyId } }, // Remove user from company's fans list
+            }
+        });
+    }
 }

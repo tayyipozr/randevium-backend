@@ -1,10 +1,11 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import * as path from 'path';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class FirebaseService implements OnModuleInit {
-    constructor() { }
+    constructor(private readonly prisma: PrismaService) { }
 
     onModuleInit() {
         // Check if Firebase is already initialized
@@ -48,13 +49,33 @@ export class FirebaseService implements OnModuleInit {
         }
     }
 
-    async subscribeToTopic(token: string, topic: string) {
+    async subscribeToTopic(userId: string, token: string, topic: string) {
+        const user = await this.prisma.user.findUnique({
+            where: {
+                id: userId,
+                NOT: {
+                    token: token
+                }
+            }
+        });
+
+        if (user) {
+            await this.prisma.user.update({
+                where: {
+                    id: userId
+                },
+                data: {
+                    token: token
+                }
+            });
+        }
+
         try {
             await admin.messaging().subscribeToTopic(token, topic);
-            return { message: `Token subscribed to ${topic}` };
         } catch (error) {
             console.error('Error subscribing to topic:', error);
             throw error;
         }
+        return { message: `Token subscribed to ${topic}` };
     }
 }

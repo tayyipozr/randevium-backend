@@ -3,7 +3,7 @@ import { CompanyService } from './company.service';
 import { CompanyRequestModel } from './model';
 import { CompanyUpdateModel } from './model/company-update.model';
 import { Role } from 'src/auth/enum';
-import { Roles } from 'src/auth/decorator';
+import { GetUser, Roles } from 'src/auth/decorator';
 
 @Controller('company')
 export class CompanyController {
@@ -40,5 +40,10 @@ export class CompanyController {
     @Roles(Role.Admin)
     deleteCategory(@Param('id') id: string) {
         return this.companyService.deleteCompany(id);
+    }
+
+    @Put(':id/favorite')
+    favoriteCompany(@GetUser('id') userId: string, @Param('id') companyId, @Body() body: { isFavorite: boolean }) {
+        return this.companyService.favoriteCompany(userId, companyId, body.isFavorite);
     }
 }

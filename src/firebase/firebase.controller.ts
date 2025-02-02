@@ -1,24 +1,26 @@
 import { Controller, Post, Body, Global } from '@nestjs/common';
 import { FirebaseService } from './firebase.service';
-import { Public } from 'src/auth/decorator';
+import { GetUser, Roles } from 'src/auth/decorator';
+import { Role } from 'src/auth/enum';
 
-@Public()
 @Controller('firebase')
 export class FirebaseController {
     constructor(private readonly firebaseService: FirebaseService) { }
 
+    @Roles(Role.Admin)
     @Post('send-notification')
-    async sendNotification(@Body() body: { token: string; title: string; message: string }) {
+    sendNotification(@Body() body: { token: string; title: string; message: string }) {
         return this.firebaseService.sendNotification(body.token, body.title, body.message);
     }
 
+    @Roles(Role.Admin)
     @Post('send-topic')
-    async sendNotificationToTopic(@Body() body: { topic: string; title: string; message: string }) {
+    sendNotificationToTopic(@Body() body: { topic: string; title: string; message: string }) {
         return this.firebaseService.sendNotificationToTopic(body.topic, body.title, body.message);
     }
 
     @Post('subscribe-topic')
-    async subscribeToTopic(@Body() body: { token: string; topic: string }) {
-        return this.firebaseService.subscribeToTopic(body.token, body.topic);
+    subscribeToTopic(@GetUser('id') userId: string, @Body() body: { token: string; topic: string }) {
+        return this.firebaseService.subscribeToTopic(userId, body.token, body.topic);
     }
 }

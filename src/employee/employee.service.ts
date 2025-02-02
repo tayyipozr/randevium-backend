@@ -38,6 +38,11 @@ export class EmployeeService {
                         images: true,
 
                     }
+                },
+                employeeSettings: {
+                    include: {
+                        workingDays: true
+                    }
                 }
             }
         });
