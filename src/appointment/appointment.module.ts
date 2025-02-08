@@ -8,4 +8,4 @@ import { LoggerService } from 'src/utils';
   controllers: [AppointmentController],
   providers: [AppointmentService, AppointmentDetailService, LoggerService],
 })
-export class AppointmentModule { }
+export class AppointmentModule {}

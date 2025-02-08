@@ -30,9 +30,12 @@ model User {
   roles             Role[]
   appointments      Appointment[]
   favoriteCompanies Company[]
+  comments          CommentModel[]
+  notifications     NotificationModel[]
 
   employee Employee?
   Address  Address?
+
 }
 
 model Role {
@@ -65,6 +68,7 @@ model Company {
   employees      Employee[]
   category       Category[]
   favoritedUsers User[]
+  comments       CommentModel[]
 }
 
 model Employee {
@@ -159,6 +163,7 @@ model Appointment {
 
   users             User[]
   appointmentDetail AppointmentDetail[]
+  notifications     NotificationModel[]
 }
 
 model AppointmentDetail {
@@ -291,4 +296,43 @@ model Location {
   lng      Float
   adresses CompanyAddress[]
   Address  Address[]
+}
+
+model NotificationModel {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now())
+  title     String   @db.VarChar(150)
+  message   String   @db.VarChar(150)
+  isReaded  Boolean  @default(false)
+
+  userId    String    @db.Uuid
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  appointmentId    String?    @db.Uuid
+  appointment      Appointment?     @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+}
+
+model CommentModel {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now())
+  comment   String?   @db.VarChar(150)
+  star      String   @db.VarChar(1)
+
+  companyId String    @db.Uuid
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  userId    String    @db.Uuid
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  images    CommentImage[] 
+}
+
+model CommentImage {
+  id        String   @id @default(uuid()) @db.Uuid
+  imageUrl  String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  commentId String  @db.Uuid
+  comment   CommentModel @relation(fields: [commentId], references: [id], onDelete: Cascade)
 }

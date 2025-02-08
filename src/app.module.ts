@@ -1,4 +1,4 @@
-import { Logger, MiddlewareConsumer, Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { LoggerMiddleware } from './utils/logger/logger.middleware';
 import { PrismaModule } from './prisma/prisma.module';
@@ -16,12 +16,31 @@ import { AppointmentDetailModule } from './appointment-detail/appointment-detail
 import { DragonflyModule } from './dragonfly/dragonfly.module';
 import { FirebaseService } from './firebase/firebase.service';
 import { FirebaseModule } from './firebase/firebase.module';
+import { NotificationModule } from './notification/notificaiton.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({
-    isGlobal: true,
-  }), AuthModule, PrismaModule, CategoryModule, CompanyModule, ServiceModule, EmployeeModule, ServiceDetailsModule, AppointmentModule, AppointmentDetailModule, DragonflyModule, FirebaseModule],
-  providers: [{ provide: APP_GUARD, useClass: AtGuard }, { provide: APP_GUARD, useClass: RolesGuard }, FirebaseService]
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    AuthModule,
+    PrismaModule,
+    CategoryModule,
+    CompanyModule,
+    ServiceModule,
+    EmployeeModule,
+    ServiceDetailsModule,
+    AppointmentModule,
+    AppointmentDetailModule,
+    DragonflyModule,
+    FirebaseModule,
+    NotificationModule,
+  ],
+  providers: [
+    { provide: APP_GUARD, useClass: AtGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+    FirebaseService,
+  ],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

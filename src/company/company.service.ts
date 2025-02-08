@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CompanyRequestModel } from './model';
 import { CompanyUpdateModel } from './model/company-update.model';
@@ -7,162 +7,168 @@ import { LoggerService } from 'src/utils/logger/logger.service';
 
 @Injectable()
 export class CompanyService {
-    private readonly COMPANIES_CACHE_KEY = 'companies';
-    private readonly COMPANY_CACHE_KEY = 'company:';
+  private readonly COMPANIES_CACHE_KEY = 'companies';
+  private readonly COMPANY_CACHE_KEY = 'company:';
 
-    constructor(
-        private readonly prisma: PrismaService,
-        private readonly cache: DragonflyService,
-        private readonly logger: LoggerService,
-    ) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: DragonflyService,
+    private readonly logger: LoggerService,
+  ) {}
 
-    async getCompanies() {
-        // Try to get from cache first
-        const cached = await this.cache.getJson<any[]>(this.COMPANIES_CACHE_KEY);
+  async getCompanies() {
+    // Try to get from cache first
+    const cached = await this.cache.getJson<any[]>(this.COMPANIES_CACHE_KEY);
 
-        if (cached) {
-            this.logger.log("Cache hit for companies", CompanyService.name);
-            return cached;
-        }
-        this.logger.log("Cache miss for companies", "CompanyService");
-
-        // If not in cache, get from database
-        const companies = await this.prisma.company.findMany({
-            include: {
-                images: true,
-                category: true,
-                companySettings: {
-                    include: {
-                        workingDays: true,
-                        companyAddress: {
-                            include: {
-                                city: true,
-                                country: true,
-                                district: true,
-                                location: true
-                            }
-                        }
-                    }
-                },
-            }
-        });
-
-        // Store in cache
-        await this.cache.setJson(this.COMPANIES_CACHE_KEY, companies);
-
-        return companies;
+    if (cached) {
+      this.logger.log('Cache hit for companies', CompanyService.name);
+      return cached;
     }
+    this.logger.log('Cache miss for companies', 'CompanyService');
 
-    async getCompanyById(id: string) {
-        // Try to get from cache first
-        const cached = await this.cache.getJson<any>(this.COMPANY_CACHE_KEY + id);
-
-        if (cached) {
-            this.logger.log(`Cache hit for company ${id}`, "CompanyService");
-            return cached;
-        }
-        this.logger.log(`Cache miss for company ${id}`, "CompanyService");
-
-        const company = await this.prisma.company.findUnique({
-            where: { id },
-            include: {
-                images: true,
-                category: true,
-                employees: {
-                    include: {
-                        serviceDetails: {
-                            include: {
-                                service: true
-                            }
-                        }
-                    }
-                },
-                companySettings: {
-                    include: {
-                        companyAddress: {
-                            include: {
-                                city: true,
-                                country: true,
-                                district: true,
-                                location: true
-                            }
-                        },
-                        workingDays: true
-                    }
-                },
-            }
-        });
-
-        if (company) {
-            // Store in cache
-            await this.cache.setJson(this.COMPANY_CACHE_KEY + id, company);
-        }
-
-        return company;
-    }
-
-    async getCompanyWorkingDays(id: string) {
-        return await this.prisma.workingCompanyDays.findMany({
-            where: {
-                companySettings: {
-                    companyId: id
-                }
+    // If not in cache, get from database
+    const companies = await this.prisma.company.findMany({
+      include: {
+        images: true,
+        category: true,
+        comments: true,
+        companySettings: {
+          include: {
+            workingDays: true,
+            companyAddress: {
+              include: {
+                city: true,
+                country: true,
+                district: true,
+                location: true,
+              },
             },
-            include: {
-                companySettings: {
-                    select: {
-                        companyId: true
-                    }
-                }
-            }
-        });
+          },
+        },
+      },
+    });
+
+    // Store in cache
+    await this.cache.setJson(this.COMPANIES_CACHE_KEY, companies);
+
+    return companies;
+  }
+
+  async getCompanyById(id: string) {
+    // Try to get from cache first
+    const cached = await this.cache.getJson<any>(this.COMPANY_CACHE_KEY + id);
+
+    if (cached) {
+      this.logger.log(`Cache hit for company ${id}`, 'CompanyService');
+      return cached;
+    }
+    this.logger.log(`Cache miss for company ${id}`, 'CompanyService');
+
+    const company = await this.prisma.company.findUnique({
+      where: { id },
+      include: {
+        images: true,
+        category: true,
+        employees: {
+          include: {
+            serviceDetails: {
+              include: {
+                service: true,
+              },
+            },
+          },
+        },
+        companySettings: {
+          include: {
+            companyAddress: {
+              include: {
+                city: true,
+                country: true,
+                district: true,
+                location: true,
+              },
+            },
+            workingDays: true,
+          },
+        },
+        comments: true,
+      },
+    });
+
+    if (company) {
+      // Store in cache
+      await this.cache.setJson(this.COMPANY_CACHE_KEY + id, company);
     }
 
-    async createCompany(model: CompanyRequestModel) {
-        this.logger.log('Creating new company', 'CompanyService');
-        const company = await this.prisma.company.create({
-            data: model
-        });
+    return company;
+  }
 
-        // Invalidate companies cache
-        await this.cache.deleteString(this.COMPANIES_CACHE_KEY);
+  async getCompanyWorkingDays(id: string) {
+    return await this.prisma.workingCompanyDays.findMany({
+      where: {
+        companySettings: {
+          companyId: id,
+        },
+      },
+      include: {
+        companySettings: {
+          select: {
+            companyId: true,
+          },
+        },
+      },
+    });
+  }
 
-        return company;
-    }
+  async createCompany(model: CompanyRequestModel) {
+    this.logger.log('Creating new company', 'CompanyService');
+    const company = await this.prisma.company.create({
+      data: model,
+    });
 
-    async updateCompany(id: string, model: CompanyUpdateModel) {
-        const company = await this.prisma.company.update({
-            where: { id },
-            data: model
-        });
+    // Invalidate companies cache
+    await this.cache.deleteString(this.COMPANIES_CACHE_KEY);
 
-        // Invalidate both caches
-        await this.cache.deleteString(this.COMPANIES_CACHE_KEY);
-        await this.cache.deleteString(this.COMPANY_CACHE_KEY + id);
+    return company;
+  }
 
-        return company;
-    }
+  async updateCompany(id: string, model: CompanyUpdateModel) {
+    const company = await this.prisma.company.update({
+      where: { id },
+      data: model,
+    });
 
-    async deleteCompany(id: string) {
-        const company = await this.prisma.company.delete({
-            where: { id }
-        });
+    // Invalidate both caches
+    await this.cache.deleteString(this.COMPANIES_CACHE_KEY);
+    await this.cache.deleteString(this.COMPANY_CACHE_KEY + id);
 
-        // Invalidate both caches
-        await this.cache.deleteString(this.COMPANIES_CACHE_KEY);
-        await this.cache.deleteString(this.COMPANY_CACHE_KEY + id);
+    return company;
+  }
 
-        return company;
-    }
+  async deleteCompany(id: string) {
+    const company = await this.prisma.company.delete({
+      where: { id },
+    });
 
-    async favoriteCompany(userId: string, companyId: string, isFavorite: boolean) {
-        return this.prisma.user.update({
-            where: { id: userId },
-            data: {
-                favoriteCompanies: isFavorite
-                    ? { connect: { id: companyId } } // Add user to company's fans list
-                    : { disconnect: { id: companyId } }, // Remove user from company's fans list
-            }
-        });
-    }
+    // Invalidate both caches
+    await this.cache.deleteString(this.COMPANIES_CACHE_KEY);
+    await this.cache.deleteString(this.COMPANY_CACHE_KEY + id);
+
+    return company;
+  }
+
+  async favoriteCompany(
+    userId: string,
+    companyId: string,
+    isFavorite: boolean,
+  ) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        favoriteCompanies: isFavorite
+          ? { connect: { id: companyId } } // Add user to company's fans list
+          : { disconnect: { id: companyId } }, // Remove user from company's fans list
+      },
+    });
+  }
 }
