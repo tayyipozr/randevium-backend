@@ -62,6 +62,7 @@ export class AppointmentDetailService {
       include: {
         serviceDetails: {
           include: {
+            service: true,
             employee: {
               select: {
                 company: {

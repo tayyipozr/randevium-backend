@@ -10,7 +10,7 @@ export class AppointmentDetailController {
     private readonly logger: LoggerService,
   ) {}
 
-  @Get(':id')
+  @Get('detail/:id')
   async getByAppoinmentDetailId(
     @Param('appoinmentDetailId') appoinmentDetailId: string,
   ) {
