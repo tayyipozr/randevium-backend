@@ -18,6 +18,9 @@ export class NotificationService {
       where: {
         userId,
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
       include: {
         user: true,
         appointment: true,

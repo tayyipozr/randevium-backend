@@ -10,6 +10,19 @@ export class AppointmentDetailController {
     private readonly logger: LoggerService,
   ) {}
 
+  @Get(':id')
+  async getByAppoinmentDetailId(
+    @Param('appoinmentDetailId') appoinmentDetailId: string,
+  ) {
+    this.logger.log(
+      `Fetching appointment details for appoinmentDetailId: ${appoinmentDetailId}`,
+      'AppointmentDetailController',
+    );
+    return await this.appointmentDetailService.getByAppoinmentDetailId(
+      appoinmentDetailId,
+    );
+  }
+
   @Get('user')
   async getByUserId(@GetUser('id') userId: string) {
     this.logger.log(

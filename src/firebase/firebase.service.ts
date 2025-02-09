@@ -26,7 +26,12 @@ export class FirebaseService implements OnModuleInit {
     }
   }
 
-  async sendNotification(token: string, title: string, body: string) {
+  async sendNotification(
+    token: string,
+    title: string,
+    body: string,
+    appointmentId?: string,
+  ) {
     try {
       const message = {
         notification: { title, body },
@@ -46,6 +51,7 @@ export class FirebaseService implements OnModuleInit {
         newNotif.title = title;
         newNotif.message = body;
         newNotif.userId = user.id;
+        newNotif.appointmentId = appointmentId;
 
         this.notificationService.create(newNotif);
       }

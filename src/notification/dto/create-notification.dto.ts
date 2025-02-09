@@ -29,4 +29,9 @@ export class CreateNotificationDto {
   @IsNotEmpty()
   @ApiProperty()
   userId: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty()
+  appointmentId?: string;
 }
