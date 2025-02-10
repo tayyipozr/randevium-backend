@@ -173,6 +173,22 @@ export class AuthService {
     return user;
   }
 
+  async checkUserFromPhone(phoneNumber: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { phoneNumber: phoneNumber },
+    });
+
+    if (!user) {
+      throw new ForbiddenException('Kullanıcı bulunamadı');
+    }
+
+    delete user.hash;
+    delete user.hashedRt;
+    delete user.token;
+
+    return user;
+  }
+
   async blacklistToken(token: string, expiresIn: number) {
     try {
       await this.cache.setString(`bl_${token}`, 'blacklisted', expiresIn);

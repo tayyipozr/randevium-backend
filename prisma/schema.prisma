@@ -19,6 +19,7 @@ model User {
   updatedAt   DateTime    @updatedAt
   email       String      @unique
   phoneNumber String      @unique
+  status      String      @default("1") @db.VarChar(1)  // 1 - verified 2- unverified 3-blocked
   hash        String
   hashedRt    String?
   firstName   String?

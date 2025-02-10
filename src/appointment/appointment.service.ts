@@ -114,14 +114,15 @@ export class AppointmentService {
     }
 
     try {
+      const userIds = appointmentRequestModel.userIds;
+      userIds.push(userId);
+
       const appointment = await this.prisma.appointment.create({
         data: {
           totalDuration: 0,
           totalPrice: 0,
           users: {
-            connect: {
-              id: userId,
-            },
+            connect: userIds.map((id) => ({ id })),
           },
         },
       });
@@ -158,18 +159,18 @@ export class AppointmentService {
         },
       });
 
-      const userIds = serviceDetails.map((e) => e.employee.userId);
+      const employeeUserIds = serviceDetails.map((e) => e.employee.userId);
 
-      const users = await this.prisma.user.findMany({
+      const employeeUsers = await this.prisma.user.findMany({
         where: {
           id: {
-            in: userIds,
+            in: employeeUserIds,
           },
         },
       });
 
-      if (users.length > 0) {
-        users.forEach((u) => {
+      if (employeeUsers.length > 0) {
+        employeeUsers.forEach((u) => {
           if (!!user.token) {
             const userServiceDetails = serviceDetails.filter(
               (service) => service.employee.userId === u.id,

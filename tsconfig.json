@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "types": ["node", "serve-static"],
     "module": "commonjs",
     "declaration": true,
     "removeComments": true,

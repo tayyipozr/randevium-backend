@@ -17,9 +17,16 @@ import { DragonflyModule } from './dragonfly/dragonfly.module';
 import { FirebaseService } from './firebase/firebase.service';
 import { FirebaseModule } from './firebase/firebase.module';
 import { NotificationModule } from './notification/notificaiton.module';
+import { join } from 'path';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -35,6 +42,7 @@ import { NotificationModule } from './notification/notificaiton.module';
     DragonflyModule,
     FirebaseModule,
     NotificationModule,
+    UploadModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: AtGuard },

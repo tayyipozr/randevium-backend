@@ -30,7 +30,7 @@ export class NotificationController {
     return this.notificationService.findOne(id);
   }
 
-  @Put(':id')
+  @Put('/mark-read/:id')
   markAsRead(@Param('id') id: string) {
     return this.notificationService.markAsRead(id);
   }

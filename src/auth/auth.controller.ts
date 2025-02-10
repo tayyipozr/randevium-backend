@@ -64,4 +64,9 @@ export class AuthController {
   getMe(@GetUser('id') userId: string) {
     return this.authService.getMe(userId);
   }
+
+  @Post('check-user-phone')
+  checkUserFromPhone(@Body('phone_number') phoneNumber: string) {
+    return this.authService.checkUserFromPhone(phoneNumber);
+  }
 }
