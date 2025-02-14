@@ -5,7 +5,9 @@ import { ValidationPipe } from '@nestjs/common';
 import { AllExceptionsFilter, PrismaExceptionFilter } from './utils';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { logger: ['log', 'fatal', 'error', 'warn', 'debug', 'verbose'] });
+  const app = await NestFactory.create(AppModule, {
+    logger: ['log', 'fatal', 'error', 'warn', 'debug', 'verbose'],
+  });
   app.setGlobalPrefix('/v1/api');
   //Swagger setup
   const config = new DocumentBuilder()
@@ -21,7 +23,7 @@ async function bootstrap() {
   SwaggerModule.setup('/v1/api/swagger', app, document);
 
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
-  app.useGlobalFilters(new PrismaExceptionFilter(), new AllExceptionsFilter())
+  app.useGlobalFilters(new PrismaExceptionFilter(), new AllExceptionsFilter());
 
   await app.listen(process.env.PORT ?? 3000);
 }

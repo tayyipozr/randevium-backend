@@ -1,9 +1,13 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { LoggerService } from 'src/utils/logger/logger.service';
 
 @Injectable()
 export class UploadService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly logger: LoggerService,
+  ) {}
 
   async saveImage(
     imageUrl: string,
@@ -11,33 +15,42 @@ export class UploadService {
     entityType: string,
     order: number = 0,
   ) {
-    switch (entityType) {
-      case 'comment':
-        return this.prisma.commentImage.create({
-          data: { imageUrl, commentId: entityId, order },
-        });
-      case 'user':
-        return this.prisma.userImage.create({
-          data: { imageUrl, userId: entityId, order },
-        });
-      case 'company':
-        return this.prisma.companyImage.create({
-          data: { imageUrl, companyId: entityId, order },
-        });
-      case 'category':
-        return this.prisma.categoryImage.create({
-          data: { imageUrl, categoryId: entityId, order },
-        });
-      case 'employee':
-        return this.prisma.employeeImage.create({
-          data: { imageUrl, employeeId: entityId, order },
-        });
-      case 'service':
-        return this.prisma.serviceImage.create({
-          data: { imageUrl, serviceId: entityId, order },
-        });
-      default:
-        throw new BadRequestException('Resim Yüklenemedi!');
+    try {
+      switch (entityType) {
+        case 'comment':
+          return this.prisma.commentImage.create({
+            data: { imageUrl, commentId: entityId, order },
+          });
+        case 'user':
+          return this.prisma.userImage.create({
+            data: { imageUrl, userId: entityId, order },
+          });
+        case 'company':
+          return this.prisma.companyImage.create({
+            data: { imageUrl, companyId: entityId, order },
+          });
+        case 'category':
+          return this.prisma.categoryImage.create({
+            data: { imageUrl, categoryId: entityId, order },
+          });
+        case 'employee':
+          return this.prisma.employeeImage.create({
+            data: { imageUrl, employeeId: entityId, order },
+          });
+        case 'service':
+          return this.prisma.serviceImage.create({
+            data: { imageUrl, serviceId: entityId, order },
+          });
+        default:
+          throw new BadRequestException('Resim Yüklenemedi!');
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to upload image: ${entityId}`,
+        error.stack,
+        'UploadService',
+      );
+      throw error;
     }
   }
 

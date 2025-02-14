@@ -34,6 +34,8 @@ export class EmployeeService {
             id: true,
             duration: true,
             cost: true,
+            canBeGroup: true,
+            isRecurred: true,
             service: true,
           },
         },

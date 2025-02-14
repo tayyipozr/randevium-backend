@@ -20,7 +20,7 @@ export class UploadController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: multer.diskStorage({
-        destination: './uploads',
+        destination: './dist/uploads',
         filename: (req, file, cb) => {
           const uniqueSuffix =
             Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -47,16 +47,10 @@ export class UploadController {
     @Param('entityType') entityType: string,
     @Param('entityId') entityId: string,
   ) {
-    if (!file) throw new BadRequestException('No file uploaded');
+    if (!file) throw new BadRequestException('Geçerli bir resim yükleyin!');
 
     const imageUrl = `/uploads/${file.filename}`;
-    const savedImage = await this.uploadService.saveImage(
-      imageUrl,
-      entityId,
-      entityType,
-    );
-
-    return { message: 'Resim başarıyla yüklendi', savedImage };
+    return await this.uploadService.saveImage(imageUrl, entityId, entityType);
   }
 
   @Get(':entityType/:entityId')

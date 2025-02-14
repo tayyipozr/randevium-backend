@@ -109,6 +109,7 @@ model ServiceDetails {
   cost        Decimal
   duration    Int      @db.SmallInt
   isRecurred  Boolean  @default(false)
+  canBeGroup  Boolean  @default(false)
 
   // Relations
   serviceId String  @db.Uuid
@@ -157,6 +158,7 @@ model WorkingEmployeeDays {
 
 model Appointment {
   id            String   @id @default(uuid()) @db.Uuid
+  creatorUserId String?   @db.Uuid
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   totalPrice    Decimal
@@ -169,8 +171,10 @@ model Appointment {
 
 model AppointmentDetail {
   id                  String   @id @default(uuid()) @db.Uuid
+  creatorUserId       String?   @db.Uuid
   appointmentStatus   String   @default("0") @db.VarChar(1)
   appointmentDateTime DateTime
+  hasPaymentMade      Boolean  @default(false)
 
   appointmentId String      @db.Uuid
   appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)

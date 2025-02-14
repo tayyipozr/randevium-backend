@@ -11,6 +11,15 @@ export class AppointmentController {
     private readonly logger: LoggerService,
   ) {}
 
+  @Get('detail/:appoinmentId')
+  async getByAppoinmentDetailId(@Param('appoinmentId') appoinmentId: string) {
+    this.logger.log(
+      `Fetching appointment for appoinmentId: ${appoinmentId}`,
+      'AppointmentDetailController',
+    );
+    return await this.appointmentService.getByAppoinmentId(appoinmentId);
+  }
+
   @Get('user')
   async getByUserId(@GetUser('id') userId: string) {
     this.logger.log(
@@ -48,5 +57,20 @@ export class AppointmentController {
       'AppointmentController',
     );
     return await this.appointmentService.createAppointment(userId, model);
+  }
+
+  @Post('/:appointmentId/cancel')
+  async cancelAppointment(
+    @GetUser('id') userId: string,
+    @Param('appointmentId') appointmentId: string,
+  ) {
+    this.logger.log(
+      `cancel a appointment for user: ${userId} and appointmentId: ${appointmentId}`,
+      'AppointmentController',
+    );
+    return await this.appointmentService.cancelAppointment(
+      userId,
+      appointmentId,
+    );
   }
 }

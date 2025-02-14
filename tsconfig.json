@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "types": ["node", "serve-static"],
+    "types": ["node", "serve-static", "jest", "mocha"],
     "module": "commonjs",
     "declaration": true,
     "removeComments": true,

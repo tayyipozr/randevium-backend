@@ -15,6 +15,39 @@ export class AppointmentService {
     private readonly firebase: FirebaseService,
   ) {}
 
+  async getByAppoinmentId(appointmentId: string) {
+    this.logger.log(
+      `Fetching appointment for appointmentId: ${appointmentId}`,
+      'AppointmentService',
+    );
+    return await this.prisma.appointment.findUnique({
+      where: {
+        id: appointmentId,
+      },
+      include: {
+        appointmentDetail: {
+          include: {
+            serviceDetails: {
+              include: {
+                employee: {
+                  select: {
+                    user: true,
+                    company: {
+                      select: {
+                        name: true,
+                        phoneNumber: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
   async getByUserId(userId: string) {
     this.logger.log(
       `Fetching appointments for user: ${userId}`,
@@ -119,6 +152,7 @@ export class AppointmentService {
 
       const appointment = await this.prisma.appointment.create({
         data: {
+          creatorUserId: userId,
           totalDuration: 0,
           totalPrice: 0,
           users: {
@@ -128,6 +162,7 @@ export class AppointmentService {
       });
 
       await this.appointmentDetailService.createAppointmentDetails(
+        userId,
         appointment.id,
         appointmentRequestModel.appointmentDetails,
       );
@@ -141,53 +176,20 @@ export class AppointmentService {
         e.serviceDetails.join(', '),
       );
 
-      const user = await this.prisma.user.findFirst({
-        where: {
-          id: userId,
-        },
-      });
-
-      const serviceDetails = await this.prisma.serviceDetails.findMany({
-        where: {
-          id: {
-            in: serviceIds,
-          },
-        },
-        include: {
-          employee: true,
-          service: true,
-        },
-      });
-
-      const employeeUserIds = serviceDetails.map((e) => e.employee.userId);
-
-      const employeeUsers = await this.prisma.user.findMany({
-        where: {
-          id: {
-            in: employeeUserIds,
-          },
-        },
-      });
-
-      if (employeeUsers.length > 0) {
-        employeeUsers.forEach((u) => {
-          if (!!user.token) {
-            const userServiceDetails = serviceDetails.filter(
-              (service) => service.employee.userId === u.id,
-            );
-
-            userServiceDetails.forEach((serviceDetail) => {
-              const message = `${user?.firstName ?? '-'} ${user?.lastName ?? '-'} ${serviceDetail?.service?.name ?? '-'} hizmeti için bir randevu oluşturdu.`;
-
-              this.firebase.sendNotification(
-                user.token,
-                'Randevu Oluşturuldu',
-                message,
-                appointment.id,
-              );
-            });
-          }
-        });
+      try {
+        await this.sendNotificationToEmployee(
+          appointment.id,
+          serviceIds,
+          userId,
+          userIds,
+          false,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Failed to send notification to user: ${userId}`,
+          error.stack,
+          'AppointmentService',
+        );
       }
 
       return appointment;
@@ -199,5 +201,113 @@ export class AppointmentService {
       );
       throw error;
     }
+  }
+
+  async sendNotificationToEmployee(
+    appointmentId: string,
+    serviceIds: string[],
+    userId: string,
+    userIds: string[],
+    isCancel: boolean,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    const serviceDetails = await this.prisma.serviceDetails.findMany({
+      where: {
+        id: {
+          in: serviceIds,
+        },
+      },
+      include: {
+        employee: true,
+        service: true,
+      },
+    });
+
+    const employeeUserIds = serviceDetails.map((e) => e.employee.userId);
+
+    const employeeUsers = await this.prisma.user.findMany({
+      where: {
+        id: {
+          in: employeeUserIds,
+        },
+      },
+    });
+
+    if (employeeUsers.length > 0) {
+      employeeUsers.forEach((u) => {
+        if (!!user.token) {
+          const userServiceDetails = serviceDetails.filter(
+            (service) => service.employee.userId === u.id,
+          );
+
+          userServiceDetails.forEach((serviceDetail) => {
+            let message = `${user?.firstName ?? '-'} ${user?.lastName ?? '-'} ${serviceDetail?.service?.name ?? '-'} hizmeti için ${userIds.length > 1 ? 'birden çok katılımcılı ' : ''}bir randevu oluşturdu.`;
+
+            if (!!isCancel) {
+              message = `${user?.firstName ?? '-'} ${user?.lastName ?? '-'} ${serviceDetail?.service?.name ?? '-'} hizmeti için randevusunu iptal etti.`;
+            }
+
+            this.firebase.sendNotification(
+              user.token,
+              'Randevu Oluşturuldu',
+              message,
+              appointmentId,
+            );
+          });
+        }
+      });
+    }
+  }
+
+  async cancelAppointment(userId: string, appointmentId: string) {
+    this.logger.log(
+      `cancel appointment for user: ${userId} and appointmentId: ${appointmentId}`,
+      'AppointmentService',
+    );
+
+    const appointment = await this.prisma.appointment.findUnique({
+      where: {
+        id: appointmentId,
+      },
+      include: {
+        appointmentDetail: {
+          include: {
+            serviceDetails: true,
+          },
+        },
+      },
+    });
+
+    const appointmentDetailIds = appointment.appointmentDetail.map((e) => e.id);
+
+    const updatedAppointment = await this.prisma.appointmentDetail.updateMany({
+      where: {
+        id: {
+          in: appointmentDetailIds,
+        },
+      },
+      data: {
+        appointmentStatus: '2',
+      },
+    });
+
+    const serviceIds = appointment.appointmentDetail.map((e) =>
+      e.serviceDetails.join(', '),
+    );
+
+    await this.sendNotificationToEmployee(
+      appointment.id,
+      serviceIds,
+      userId,
+      [],
+      false,
+    );
+
+    return updatedAppointment;
   }
 }

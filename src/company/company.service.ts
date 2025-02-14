@@ -31,10 +31,8 @@ export class CompanyService {
       include: {
         images: true,
         category: true,
-        comments: true,
         companySettings: {
           include: {
-            workingDays: true,
             companyAddress: {
               include: {
                 city: true,
@@ -69,17 +67,36 @@ export class CompanyService {
       include: {
         images: true,
         category: true,
+        comments: true,
         employees: {
           include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                createdAt: true,
+                updatedAt: true,
+                images: true,
+              },
+            },
+            company: true,
             serviceDetails: {
               include: {
                 service: true,
+              },
+            },
+            employeeSettings: {
+              include: {
+                workingDays: true,
               },
             },
           },
         },
         companySettings: {
           include: {
+            workingDays: true,
             companyAddress: {
               include: {
                 city: true,
@@ -88,10 +105,8 @@ export class CompanyService {
                 location: true,
               },
             },
-            workingDays: true,
           },
         },
-        comments: true,
       },
     });
 

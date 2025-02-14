@@ -164,7 +164,7 @@ export class AuthService {
   async getMe(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: { roles: true, favoriteCompanies: true },
+      include: { roles: true, favoriteCompanies: true, images: true },
     });
 
     delete user.hash;
@@ -179,7 +179,9 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new ForbiddenException('Kullanıcı bulunamadı');
+      throw new ForbiddenException(
+        'Telefon numarası sistemde kayıtlı bir kullanıcıya ait değil',
+      );
     }
 
     delete user.hash;

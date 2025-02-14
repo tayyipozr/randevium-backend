@@ -15,15 +15,9 @@ export class AppointmentDetailService {
       `Fetching appointment details for appointmentDetailId: ${appointmentDetailId}`,
       'AppointmentDetailService',
     );
-    return await this.prisma.appointmentDetail.findFirst({
+    return await this.prisma.appointmentDetail.findUnique({
       where: {
-        appointment: {
-          appointmentDetail: {
-            some: {
-              id: appointmentDetailId,
-            },
-          },
-        },
+        id: appointmentDetailId,
       },
       include: {
         serviceDetails: {
@@ -138,6 +132,7 @@ export class AppointmentDetailService {
   }
 
   async createAppointmentDetails(
+    userId: string,
     appointmentId: string,
     models: AppointmentDetailRequestModel[],
   ): Promise<string[]> {
@@ -151,7 +146,10 @@ export class AppointmentDetailService {
       for (let i = 0; i < models.length; i++) {
         const appointmentDetail = await this.prisma.appointmentDetail.create({
           data: {
-            appointmentDateTime: models[i].appointmentDateTime + 'Z',
+            creatorUserId: userId,
+            appointmentDateTime: new Date(
+              models[i].appointmentDateTime,
+            ).toISOString(),
             appointmentId: appointmentId,
             serviceDetails: {
               connect: models[i].serviceDetails.map((id) => ({ id })),
