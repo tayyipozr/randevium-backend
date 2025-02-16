@@ -67,6 +67,9 @@ export class ServiceDetailsService {
     );
     return await this.prisma.serviceDetails.findMany({
       where: { employeeId },
+      orderBy: {
+        createdAt: 'desc',
+      },
       include: {
         service: {
           include: { images: true },

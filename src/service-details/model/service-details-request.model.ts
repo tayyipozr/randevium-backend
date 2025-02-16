@@ -1,31 +1,44 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsNumber, IsPositive, IsString, IsUUID, Length } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsNumber,
+  IsPositive,
+  IsString,
+  IsUUID,
+  Length,
+} from 'class-validator';
 
 export class ServiceDetailsRequestModel {
-    @IsString()
-    @Length(10, 150)
-    @ApiProperty()
-    description: string;
+  @IsString()
+  @Length(10, 150)
+  @ApiProperty()
+  description: string;
 
-    @IsNumber()
-    @IsPositive()
-    @IsNotEmpty()
-    @ApiProperty()
-    cost: number;
+  @IsNumber()
+  @IsPositive()
+  @IsNotEmpty()
+  @ApiProperty()
+  cost: number;
 
-    @IsNumber()
-    @IsPositive()
-    @IsNotEmpty()
-    @ApiProperty()
-    duration: number;
+  @IsNumber()
+  @IsPositive()
+  @IsNotEmpty()
+  @ApiProperty()
+  duration: number;
 
-    @IsUUID()
-    @IsNotEmpty()
-    @ApiProperty()
-    employeeId: string;
+  @IsBoolean()
+  @IsNotEmpty()
+  @ApiProperty()
+  canBeGroup: boolean;
 
-    @IsUUID()
-    @IsNotEmpty()
-    @ApiProperty()
-    serviceId: string;
+  @IsUUID()
+  @IsNotEmpty()
+  @ApiProperty()
+  employeeId: string;
+
+  @IsUUID()
+  @IsNotEmpty()
+  @ApiProperty()
+  serviceId: string;
 }

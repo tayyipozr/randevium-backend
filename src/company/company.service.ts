@@ -31,6 +31,7 @@ export class CompanyService {
       include: {
         images: true,
         category: true,
+        comments: true,
         companySettings: {
           include: {
             companyAddress: {
@@ -67,7 +68,11 @@ export class CompanyService {
       include: {
         images: true,
         category: true,
-        comments: true,
+        comments: {
+          include: {
+            user: true,
+          },
+        },
         employees: {
           include: {
             user: {

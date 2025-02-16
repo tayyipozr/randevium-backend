@@ -167,6 +167,7 @@ model Appointment {
   users             User[]
   appointmentDetail AppointmentDetail[]
   notifications     NotificationModel[]
+  comments          CommentModel[]
 }
 
 model AppointmentDetail {
@@ -323,7 +324,10 @@ model CommentModel {
   comment   String?   @db.VarChar(150)
   star      String   @db.VarChar(1)
 
-  companyId String    @db.Uuid
+  appoinmentId String    @db.Uuid
+  appoinment   Appointment? @relation(fields: [appoinmentId], references: [id], onDelete: Cascade)
+
+  companyId String?    @db.Uuid
   company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
   
   userId    String    @db.Uuid

@@ -26,7 +26,11 @@ export class ServiceService {
     }
 
     this.logger.log('Cache miss, fetching from database', 'ServiceService');
-    const services = await this.prisma.service.findMany();
+    const services = await this.prisma.service.findMany({
+      orderBy: {
+        name: 'desc',
+      },
+    });
 
     // Store in cache
     await this.cache.setJson(this.CACHE_KEY, services);
@@ -47,6 +51,9 @@ export class ServiceService {
             id: categoryId,
           },
         },
+      },
+      orderBy: {
+        name: 'desc',
       },
     });
   }

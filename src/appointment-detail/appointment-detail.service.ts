@@ -20,6 +20,7 @@ export class AppointmentDetailService {
         id: appointmentDetailId,
       },
       include: {
+        appointment: true,
         serviceDetails: {
           include: {
             employee: {
@@ -54,6 +55,7 @@ export class AppointmentDetailService {
         },
       },
       include: {
+        appointment: true,
         serviceDetails: {
           include: {
             service: true,
@@ -85,6 +87,7 @@ export class AppointmentDetailService {
         },
       },
       include: {
+        appointment: true,
         serviceDetails: {
           include: {
             employee: {
@@ -112,11 +115,20 @@ export class AppointmentDetailService {
           },
         },
       },
+      orderBy: {
+        appointmentDateTime: 'desc',
+      },
       include: {
+        appointment: {
+          include: {
+            users: true,
+          },
+        },
         serviceDetails: {
           include: {
             employee: {
               select: {
+                user: true,
                 company: {
                   select: {
                     name: true,

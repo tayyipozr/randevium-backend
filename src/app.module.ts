@@ -20,6 +20,7 @@ import { NotificationModule } from './notification/notificaiton.module';
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { UploadModule } from './upload/upload.module';
+import { CommentModule } from './comment/comment.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { UploadModule } from './upload/upload.module';
     FirebaseModule,
     NotificationModule,
     UploadModule,
+    CommentModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: AtGuard },
