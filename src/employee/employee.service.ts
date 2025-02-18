@@ -10,6 +10,7 @@ import { randomBytes } from 'crypto';
 import { AuthSignUpRequest } from 'src/auth/dto';
 import { Role } from 'src/auth/enum';
 import { LoggerService } from 'src/utils';
+import { EmployeeWorkingDaysUpdateModel } from './model/employee-working-days-update.model';
 
 @Injectable()
 export class EmployeeService {
@@ -58,6 +59,63 @@ export class EmployeeService {
         },
       },
     });
+  }
+
+  async getEmployeeWorkingDays(employeeSettingsId: string) {
+    this.logger.log(
+      `getEmployeeWorkingHours: ${employeeSettingsId}`,
+      'EmployeeService',
+    );
+    return await this.prisma.workingEmployeeDays.findMany({
+      where: {
+        employeeSettingsId: employeeSettingsId,
+      },
+    });
+  }
+
+  async updateEmployeeWorkingDays(
+    employeeSettingsId: string,
+    model: EmployeeWorkingDaysUpdateModel,
+  ) {
+    this.logger.log(
+      `updateEmployeeWorkingDays: ${model.workingDays}`,
+      'EmployeeService',
+    );
+
+    const newWorkingDays = model.workingDays.filter((day) => !day.id);
+
+    const existingWorkingDays = model.workingDays.filter((day) => !!day.id);
+
+    await Promise.all(
+      existingWorkingDays.map((day) =>
+        this.prisma.workingEmployeeDays.update({
+          where: { id: day.id },
+          data: {
+            startTime: day.startTime,
+            endTime: day.endTime,
+            status: day.status,
+          },
+        }),
+      ),
+    );
+
+    if (newWorkingDays.length > 0) {
+      await Promise.all(
+        newWorkingDays.map((day) =>
+          this.prisma.workingEmployeeDays.create({
+            data: {
+              day: day.day,
+              startTime: day.startTime,
+              endTime: day.endTime,
+              status: day.status,
+              employeeSettingsId: employeeSettingsId,
+            },
+          }),
+        ),
+      );
+    }
+
+    return 'Başarılı';
   }
 
   //TODO: Write a function that returns code for signing up employee to company

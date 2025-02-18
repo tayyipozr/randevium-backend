@@ -149,8 +149,8 @@ model WorkingEmployeeDays {
   id        String  @id @default(uuid()) @db.Uuid
   day       String  @db.VarChar(1)
   status    Boolean
-  startTime String  @db.VarChar(5)
-  endTime   String  @db.VarChar(5)
+  startTime String?  @db.VarChar(5)
+  endTime   String?  @db.VarChar(5)
 
   employeeSettings   EmployeeSettings @relation(fields: [employeeSettingsId], references: [id])
   employeeSettingsId String           @db.Uuid

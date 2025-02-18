@@ -61,10 +61,14 @@ export class AppointmentService {
           },
         },
       },
+
       include: {
         appointmentDetail: {
           include: {
             serviceDetails: true,
+          },
+          orderBy: {
+            appointmentDateTime: 'asc',
           },
         },
       },
@@ -95,6 +99,9 @@ export class AppointmentService {
           include: {
             serviceDetails: true,
           },
+          orderBy: {
+            appointmentDateTime: 'asc',
+          },
         },
       },
     });
@@ -117,6 +124,9 @@ export class AppointmentService {
         appointmentDetail: {
           include: {
             serviceDetails: true,
+          },
+          orderBy: {
+            appointmentDateTime: 'asc',
           },
         },
       },

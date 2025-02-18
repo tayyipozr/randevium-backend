@@ -168,7 +168,12 @@ export class AuthService {
         roles: true,
         favoriteCompanies: true,
         images: true,
-        employee: true,
+        employee: {
+          include: {
+            company: true,
+            employeeSettings: true,
+          },
+        },
       },
     });
 

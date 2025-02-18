@@ -54,6 +54,9 @@ export class AppointmentDetailService {
           },
         },
       },
+      orderBy: {
+        appointmentDateTime: 'asc',
+      },
       include: {
         appointment: true,
         serviceDetails: {
@@ -86,6 +89,9 @@ export class AppointmentDetailService {
           },
         },
       },
+      orderBy: {
+        appointmentDateTime: 'asc',
+      },
       include: {
         appointment: true,
         serviceDetails: {
@@ -116,11 +122,16 @@ export class AppointmentDetailService {
         },
       },
       orderBy: {
-        appointmentDateTime: 'desc',
+        appointmentDateTime: 'asc',
       },
       include: {
         appointment: {
           include: {
+            appointmentDetail: {
+              include: {
+                serviceDetails: true,
+              },
+            },
             users: true,
           },
         },
@@ -201,5 +212,36 @@ export class AppointmentDetailService {
         };
       }),
     );
+  }
+
+  async updatePaymentStatus(
+    appoinmentDetailId: string,
+    hasPaymentMade: boolean,
+  ) {
+    this.logger.log(
+      `Updating payment status for appointmentDetailId: ${appoinmentDetailId}, hasPaymentMade: ${hasPaymentMade}`,
+      'AppointmentDetailService',
+    );
+
+    try {
+      const updatedAppointmentDetail =
+        await this.prisma.appointmentDetail.update({
+          where: { id: appoinmentDetailId },
+          data: { hasPaymentMade },
+        });
+
+      this.logger.log(
+        `Successfully updated payment status for appointmentDetailId: ${appoinmentDetailId}`,
+        'AppointmentDetailService',
+      );
+      return updatedAppointmentDetail;
+    } catch (error) {
+      this.logger.error(
+        `Failed to update payment status for appointmentDetailId: ${appoinmentDetailId}`,
+        error.stack,
+        'AppointmentDetailService',
+      );
+      throw error;
+    }
   }
 }
