@@ -1,7 +1,6 @@
 import {
   ForbiddenException,
   Injectable,
-  UnauthorizedException,
   InternalServerErrorException,
 } from '@nestjs/common';
 import * as argon from 'argon2';
@@ -27,9 +26,17 @@ export class AuthService {
   async signup(dto: AuthSignUpRequest): Promise<Tokens> {
     try {
       const hash = await argon.hash(dto.password);
+      const userRole = await this.prisma.role.findUnique({
+        where: {
+          name: 'user',
+        },
+      });
 
       const user = await this.prisma.user.create({
         data: {
+          roles: {
+            connect: userRole,
+          },
           email: dto.email,
           phoneNumber: dto.phoneNumber,
           firstName: dto.firstName,
@@ -111,7 +118,7 @@ export class AuthService {
         null,
         'AuthService',
       );
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new ForbiddenException('Invalid refresh token');
     }
 
     const valid = await argon.verify(user.hashedRt, rt);
