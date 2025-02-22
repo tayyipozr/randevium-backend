@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CompanyRequestModel } from './model';
+import { CompanyRequestModel, CompanyWorkingDaysUpdateModel } from './model';
 import { CompanyUpdateModel } from './model/company-update.model';
 import { DragonflyService } from 'src/dragonfly';
 import { LoggerService } from 'src/utils/logger/logger.service';
@@ -138,6 +138,51 @@ export class CompanyService {
         },
       },
     });
+  }
+
+  async updateCompanyWorkingDays(
+    companySettingsId: string,
+    model: CompanyWorkingDaysUpdateModel,
+  ) {
+    this.logger.log(
+      `updateCompanyWorkingDays: ${model.workingDays}`,
+      'CompanyService',
+    );
+
+    const newWorkingDays = model.workingDays.filter((day) => !day.id);
+
+    const existingWorkingDays = model.workingDays.filter((day) => !!day.id);
+
+    await Promise.all(
+      existingWorkingDays.map((day) =>
+        this.prisma.workingCompanyDays.update({
+          where: { id: day.id },
+          data: {
+            startTime: day.startTime,
+            endTime: day.endTime,
+            status: day.status,
+          },
+        }),
+      ),
+    );
+
+    if (newWorkingDays.length > 0) {
+      await Promise.all(
+        newWorkingDays.map((day) =>
+          this.prisma.workingCompanyDays.create({
+            data: {
+              day: day.day,
+              startTime: day.startTime,
+              endTime: day.endTime,
+              status: day.status,
+              companySettingsId: companySettingsId,
+            },
+          }),
+        ),
+      );
+    }
+
+    return 'Başarılı';
   }
 
   async createCompany(model: CompanyRequestModel) {

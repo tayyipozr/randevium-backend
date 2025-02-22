@@ -51,6 +51,11 @@ export class EmployeeController {
     return this.employeeService.updateEmployee(id, model);
   }
 
+  @Put(':id/company')
+  updateEmployeeCompany(@Param('id') id: string, @Body() companyId: string) {
+    return this.employeeService.updateEmployeeCompany(id, companyId);
+  }
+
   @Delete(':id')
   deleteEmployee(@Param('id') id: string) {
     return this.employeeService.deleteEmployee(id);

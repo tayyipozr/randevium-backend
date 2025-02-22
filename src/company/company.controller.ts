@@ -8,7 +8,7 @@ import {
   Put,
 } from '@nestjs/common';
 import { CompanyService } from './company.service';
-import { CompanyRequestModel } from './model';
+import { CompanyRequestModel, CompanyWorkingDaysUpdateModel } from './model';
 import { CompanyUpdateModel } from './model/company-update.model';
 import { Role } from 'src/auth/enum';
 import { GetUser, Roles } from 'src/auth/decorator';
@@ -30,6 +30,17 @@ export class CompanyController {
   @Get(':id/working-days')
   getCompanyWorkingDays(@Param('id') id: string) {
     return this.companyService.getCompanyWorkingDays(id);
+  }
+
+  @Put(':companySettingsId/working-days')
+  updateCompanyWorkingDays(
+    @Param('companySettingsId') companySettingsId: string,
+    @Body() workingDays: CompanyWorkingDaysUpdateModel,
+  ) {
+    return this.companyService.updateCompanyWorkingDays(
+      companySettingsId,
+      workingDays,
+    );
   }
 
   @Post()

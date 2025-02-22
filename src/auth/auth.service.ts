@@ -177,7 +177,22 @@ export class AuthService {
         images: true,
         employee: {
           include: {
-            company: true,
+            company: {
+              include: {
+                companySettings: {
+                  include: {
+                    companyAddress: {
+                      include: {
+                        city: true,
+                        country: true,
+                        district: true,
+                        location: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
             employeeSettings: true,
           },
         },
@@ -193,6 +208,37 @@ export class AuthService {
   async checkUserFromPhone(phoneNumber: string) {
     const user = await this.prisma.user.findUnique({
       where: { phoneNumber: phoneNumber },
+      include: {
+        employee: {
+          include: {
+            company: {
+              include: {
+                companySettings: {
+                  include: {
+                    companyAddress: {
+                      include: {
+                        city: true,
+                        country: true,
+                        district: true,
+                        location: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            serviceDetails: {
+              include: {
+                service: {
+                  include: {
+                    images: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!user) {

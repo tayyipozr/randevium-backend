@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   EmployeeRequestModel,
@@ -153,17 +153,42 @@ export class EmployeeService {
         );
       }
 
-      const employee = await this.prisma.employee.create({
-        data: {
-          description: model.description,
-          companyId: model.companyId,
+      let employee = await this.prisma.employee.findUnique({
+        where: {
           userId: user.id,
         },
       });
 
-      await this.prisma.serviceDetails.createMany({
-        data: model.serviceDetails,
-      });
+      if (employee !== null && employee.companyId != null) {
+        throw new NotFoundException('Çalışan zaten bir şirkete kayıtlı!');
+      }
+
+      if (employee) {
+        employee = await this.prisma.employee.update({
+          where: {
+            id: employee.id,
+          },
+          data: {
+            description: model.description,
+            companyId: model.companyId,
+            userId: user.id,
+          },
+        });
+      } else {
+        employee = await this.prisma.employee.create({
+          data: {
+            description: model.description,
+            companyId: model.companyId,
+            userId: user.id,
+          },
+        });
+      }
+
+      if (model.serviceDetails && model.serviceDetails.length > 0) {
+        await this.prisma.serviceDetails.createMany({
+          data: model.serviceDetails,
+        });
+      }
 
       this.logger.log(
         `Employee created successfully: ${employee.id}`,
@@ -200,6 +225,35 @@ export class EmployeeService {
         phoneNumber,
       },
     });
+  }
+
+  async updateEmployeeCompany(id: string, companyId: string) {
+    this.logger.log(
+      `update company ${companyId} employee: ${id}`,
+      'EmployeeService',
+    );
+    try {
+      const result = await this.prisma.employee.update({
+        where: {
+          id,
+        },
+        data: {
+          companyId,
+        },
+      });
+      this.logger.log(
+        `Employee company updated successfully: ${id}`,
+        'EmployeeService',
+      );
+      return result;
+    } catch (error) {
+      this.logger.error(
+        `Failed to update company employee: ${id}`,
+        error.stack,
+        'EmployeeService',
+      );
+      throw error;
+    }
   }
 
   async deleteEmployee(id: string) {

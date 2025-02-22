@@ -1,15 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '@prisma/client';
 import {
   IsArray,
   IsNotEmpty,
-  IsPhoneNumber,
+  IsOptional,
   IsString,
   IsUUID,
   Length,
 } from 'class-validator';
-import { AuthSignUpRequest } from 'src/auth/dto';
-import { ServiceDetailsUpdateModel } from 'src/service-details/model/service-details-update.model';
 import { UserEmployeeRequestModel } from './user-employee-request.model';
 import { ServiceDetailsRequestModel } from 'src/service-details/model';
 
@@ -26,9 +23,9 @@ export class EmployeeRequestModel {
   companyId: string;
 
   @IsArray()
-  @IsNotEmpty()
+  @IsOptional()
   @ApiProperty()
-  serviceDetails: ServiceDetailsRequestModel[];
+  serviceDetails?: ServiceDetailsRequestModel[];
 
   @IsNotEmpty()
   @ApiProperty()

@@ -21,6 +21,7 @@ import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { UploadModule } from './upload/upload.module';
 import { CommentModule } from './comment/comment.module';
+import { ConstantModule } from './constant/constant.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { CommentModule } from './comment/comment.module';
     NotificationModule,
     UploadModule,
     CommentModule,
+    ConstantModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: AtGuard },

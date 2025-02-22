@@ -1,25 +1,37 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsNumber, IsPositive, IsString, IsUUID, Length } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsNumber,
+  IsPositive,
+  IsString,
+  Length,
+} from 'class-validator';
 
 export class ServiceDetailsUpdateModel {
-    @IsString()
-    @IsNotEmpty()
-    @Length(10, 150)
-    @ApiProperty()
-    description: string;
+  @IsString()
+  @IsNotEmpty()
+  @Length(10, 150)
+  @ApiProperty()
+  description: string;
 
-    @IsNumber()
-    @IsPositive()
-    @IsNotEmpty()
-    @ApiProperty()
-    cost: number;
+  @IsNumber()
+  @IsPositive()
+  @IsNotEmpty()
+  @ApiProperty()
+  cost: number;
 
-    @IsNumber()
-    @IsPositive()
-    @IsNotEmpty()
-    @ApiProperty()
-    duration: number;
-    /*
+  @IsNumber()
+  @IsPositive()
+  @IsNotEmpty()
+  @ApiProperty()
+  duration: number;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  @ApiProperty()
+  canBeGroup: boolean;
+  /*
     @IsUUID()
     @IsNotEmpty()
     @IsNotEmpty()

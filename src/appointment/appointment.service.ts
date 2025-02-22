@@ -264,7 +264,7 @@ export class AppointmentService {
 
             this.firebase.sendNotification(
               user.token,
-              'Randevu Oluşturuldu',
+              !!isCancel ? 'Randevu İptal Edildi' : 'Randevu Oluşturuldu',
               message,
               appointmentId,
             );

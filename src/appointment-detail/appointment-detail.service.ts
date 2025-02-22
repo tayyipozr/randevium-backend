@@ -1,13 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AppointmentDetailRequestModel } from './model/appointment-detail-request-model';
 import { LoggerService } from 'src/utils';
+import { FirebaseService } from 'src/firebase/firebase.service';
 
 @Injectable()
 export class AppointmentDetailService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
+    private readonly firebase: FirebaseService,
   ) {}
 
   async getByAppoinmentDetailId(appointmentDetailId: string) {
@@ -93,11 +95,24 @@ export class AppointmentDetailService {
         appointmentDateTime: 'asc',
       },
       include: {
-        appointment: true,
+        appointment: {
+          include: {
+            appointmentDetail: {
+              orderBy: {
+                appointmentDateTime: 'asc',
+              },
+              include: {
+                serviceDetails: true,
+              },
+            },
+            users: true,
+          },
+        },
         serviceDetails: {
           include: {
             employee: {
               select: {
+                user: true,
                 company: {
                   select: {
                     name: true,
@@ -128,6 +143,9 @@ export class AppointmentDetailService {
         appointment: {
           include: {
             appointmentDetail: {
+              orderBy: {
+                appointmentDateTime: 'asc',
+              },
               include: {
                 serviceDetails: true,
               },
@@ -242,6 +260,108 @@ export class AppointmentDetailService {
         'AppointmentDetailService',
       );
       throw error;
+    }
+  }
+
+  async cancelAppointmentDetail(userId: string, appointmentDetailId: string) {
+    this.logger.log(
+      `cancel appointment detail for user: ${userId} and appointmentId: ${appointmentDetailId}`,
+      'AppointmentDetailService',
+    );
+
+    const appointmentDetail = await this.prisma.appointmentDetail.findUnique({
+      where: {
+        id: appointmentDetailId,
+      },
+      include: {
+        serviceDetails: true,
+      },
+    });
+
+    if (!appointmentDetail) {
+      throw new NotFoundException('Randevu bulunamadı');
+    }
+
+    const updatedAppointment = await this.prisma.appointmentDetail.update({
+      where: {
+        id: appointmentDetailId,
+      },
+      data: {
+        appointmentStatus: '2',
+      },
+    });
+
+    const serviceIds = appointmentDetail.serviceDetails.map((e) => e.id);
+
+    await this.sendNotificationToEmployee(
+      appointmentDetail.appointmentId,
+      serviceIds,
+      userId,
+      [],
+      true,
+    );
+
+    return updatedAppointment;
+  }
+
+  async sendNotificationToEmployee(
+    appointmentId: string,
+    serviceIds: string[],
+    userId: string,
+    userIds: string[],
+    isCancel: boolean,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    const serviceDetails = await this.prisma.serviceDetails.findMany({
+      where: {
+        id: {
+          in: serviceIds,
+        },
+      },
+      include: {
+        employee: true,
+        service: true,
+      },
+    });
+
+    const employeeUserIds = serviceDetails.map((e) => e.employee.userId);
+
+    const employeeUsers = await this.prisma.user.findMany({
+      where: {
+        id: {
+          in: employeeUserIds,
+        },
+      },
+    });
+
+    if (employeeUsers.length > 0) {
+      employeeUsers.forEach((u) => {
+        if (!!user.token) {
+          const userServiceDetails = serviceDetails.filter(
+            (service) => service.employee.userId === u.id,
+          );
+
+          userServiceDetails.forEach((serviceDetail) => {
+            let message = `${user?.firstName ?? '-'} ${user?.lastName ?? '-'} ${serviceDetail?.service?.name ?? '-'} hizmeti için ${userIds.length > 1 ? 'birden çok katılımcılı ' : ''}bir randevu oluşturdu.`;
+
+            if (!!isCancel) {
+              message = `${user?.firstName ?? '-'} ${user?.lastName ?? '-'} ${serviceDetail?.service?.name ?? '-'} hizmeti için randevusunu iptal etti.`;
+            }
+
+            this.firebase.sendNotification(
+              user.token,
+              !!isCancel ? 'Randevu İptal Edildi' : 'Randevu Oluşturuldu',
+              message,
+              appointmentId,
+            );
+          });
+        }
+      });
     }
   }
 }

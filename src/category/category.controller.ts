@@ -13,7 +13,6 @@ import { CategoryService } from './category.service';
 import { CategoryRequestModel, CategoryUpdateModel } from './model';
 
 @Controller('category')
-@Roles(Role.Admin)
 export class CategoryController {
   constructor(private categoryService: CategoryService) {}
 
@@ -23,16 +22,19 @@ export class CategoryController {
   }
 
   @Post()
+  @Roles(Role.Admin)
   createCategories(@Body() model: CategoryRequestModel) {
     return this.categoryService.createCategories(model);
   }
 
   @Put(':id')
+  @Roles(Role.Admin)
   updateCategory(@Param('id') id: string, @Body() model: CategoryUpdateModel) {
     return this.categoryService.updateCategory(id, model);
   }
 
   @Delete(':id')
+  @Roles(Role.Admin)
   deleteCategory(@Param('id') id: string) {
     return this.categoryService.deleteCategory(id);
   }

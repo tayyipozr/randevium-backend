@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import { AppointmentDetailService } from './appointment-detail.service';
 import { GetUser } from 'src/auth/decorator';
 import { LoggerService } from 'src/utils';
@@ -62,6 +62,21 @@ export class AppointmentDetailController {
     return await this.appointmentDetailService.updatePaymentStatus(
       appoinmentDetailId,
       hasPaymentMade,
+    );
+  }
+
+  @Post('/:appointmentDetailId/cancel')
+  async cancelAppointmentDetail(
+    @GetUser('id') userId: string,
+    @Param('appointmentDetailId') appointmentDetailId: string,
+  ) {
+    this.logger.log(
+      `cancel a appointment detaik for user: ${userId} and appointmentDetailId: ${appointmentDetailId}`,
+      'AppointmentDetailController',
+    );
+    return await this.appointmentDetailService.cancelAppointmentDetail(
+      userId,
+      appointmentDetailId,
     );
   }
 }

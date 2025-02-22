@@ -9,7 +9,12 @@ import { LoggerService } from 'src/utils';
 
 @Module({
   controllers: [EmployeeController],
-  providers: [EmployeeService, AuthService, ServiceDetailsService, LoggerService],
-  imports: [AuthModule, JwtModule.register({})]
+  providers: [
+    EmployeeService,
+    AuthService,
+    ServiceDetailsService,
+    LoggerService,
+  ],
+  imports: [AuthModule, JwtModule.register({})],
 })
-export class EmployeeModule { }
+export class EmployeeModule {}
