@@ -7,7 +7,7 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { Roles } from 'src/auth/decorator';
+import { GetUser, Roles } from 'src/auth/decorator';
 import { Role } from 'src/auth/enum';
 import { EmployeeService } from './employee.service';
 import { EmployeeRequestModel, EmployeeUpdateModel } from './model';
@@ -52,12 +52,12 @@ export class EmployeeController {
   }
 
   @Put(':id/company')
-  updateEmployeeCompany(@Param('id') id: string, @Body() companyId: string) {
+  updateEmployeeCompany(@Param('id') id: string, @Body() companyId?: string) {
     return this.employeeService.updateEmployeeCompany(id, companyId);
   }
 
   @Delete(':id')
-  deleteEmployee(@Param('id') id: string) {
-    return this.employeeService.deleteEmployee(id);
+  deleteEmployee(@GetUser('id') userId: string, @Param('id') id: string) {
+    return this.employeeService.deleteEmployee(userId, id);
   }
 }

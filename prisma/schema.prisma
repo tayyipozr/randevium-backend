@@ -84,11 +84,11 @@ model Employee {
   images         EmployeeImage[]
   serviceDetails ServiceDetails[]
 
-  companyId String  @db.Uuid
-  company   Company @relation(fields: [companyId], references: [id])
+  companyId String?  @db.Uuid
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
 
-  userId String @unique @db.Uuid
-  user   User   @relation(fields: [userId], references: [id])
+  userId String? @unique @db.Uuid
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model Service {
@@ -116,7 +116,7 @@ model ServiceDetails {
   service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
   employeeId        String              @db.Uuid
-  employee          Employee            @relation(fields: [employeeId], references: [id])
+  employee          Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   AppointmentDetail AppointmentDetail[]
 
   @@unique([serviceId, employeeId])
@@ -152,7 +152,7 @@ model WorkingEmployeeDays {
   startTime String?  @db.VarChar(5)
   endTime   String?  @db.VarChar(5)
 
-  employeeSettings   EmployeeSettings @relation(fields: [employeeSettingsId], references: [id])
+  employeeSettings   EmployeeSettings @relation(fields: [employeeSettingsId], references: [id], onDelete: Cascade)
   employeeSettingsId String           @db.Uuid
 }
 
@@ -200,7 +200,7 @@ model EmployeeSettings {
   id String @id @default(uuid()) @db.Uuid
 
   employeeId String   @unique @db.Uuid
-  employee   Employee @relation(fields: [employeeId], references: [id])
+  employee   Employee @relation(fields: [employeeId], references: [id],  onDelete: Cascade)
 
   workingDays WorkingEmployeeDays[]
 }

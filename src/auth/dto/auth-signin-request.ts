@@ -6,7 +6,7 @@ export class AuthSignInRequest {
   @Length(8, 15)
   @IsNotEmpty()
   @ApiProperty()
-  @IsPhoneNumber()
+  @IsPhoneNumber('TR')
   phoneNumber: string;
 
   @IsString()

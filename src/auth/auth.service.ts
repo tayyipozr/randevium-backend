@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import * as argon from 'argon2';
-import { AuthSignInRequest, AuthSignUpRequest } from './dto';
+import { AuthSignInRequest, AuthSignUpRequest, AuthUpdateRequest } from './dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
@@ -55,7 +55,8 @@ export class AuthService {
           throw new ForbiddenException('User already exists');
         }
       }
-      throw error;
+
+      throw new ForbiddenException(error.message);
     }
   }
 
@@ -196,6 +197,22 @@ export class AuthService {
             employeeSettings: true,
           },
         },
+      },
+    });
+
+    delete user.hash;
+    delete user.hashedRt;
+
+    return user;
+  }
+
+  async updateMe(userId: string, model: AuthUpdateRequest) {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        email: model.email,
+        firstName: model.firstName,
+        lastName: model.lastName,
       },
     });
 

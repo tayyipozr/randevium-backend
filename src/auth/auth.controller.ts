@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Tokens } from './types';
-import { AuthSignInRequest, AuthSignUpRequest } from './dto';
+import { AuthSignInRequest, AuthSignUpRequest, AuthUpdateRequest } from './dto';
 import { GetUser, Public } from './decorator';
 import { LoggerService } from 'src/utils';
 
@@ -63,6 +63,14 @@ export class AuthController {
   @Get('me')
   getMe(@GetUser('id') userId: string) {
     return this.authService.getMe(userId);
+  }
+
+  @Post('me')
+  updateMe(
+    @GetUser('id') userId: string,
+    @Body('user') updateModel: AuthUpdateRequest,
+  ) {
+    return this.authService.updateMe(userId, updateModel);
   }
 
   @Post('check-user-phone')

@@ -227,7 +227,7 @@ export class EmployeeService {
     });
   }
 
-  async updateEmployeeCompany(id: string, companyId: string) {
+  async updateEmployeeCompany(id: string, companyId?: string) {
     this.logger.log(
       `update company ${companyId} employee: ${id}`,
       'EmployeeService',
@@ -238,7 +238,7 @@ export class EmployeeService {
           id,
         },
         data: {
-          companyId,
+          companyId: companyId ?? undefined,
         },
       });
       this.logger.log(
@@ -256,7 +256,17 @@ export class EmployeeService {
     }
   }
 
-  async deleteEmployee(id: string) {
+  async deleteEmployee(userId: string, id: string) {
+    const userEmployee = await this.prisma.employee.findUnique({
+      where: {
+        userId: userId,
+      },
+    });
+
+    if (userEmployee?.id == id) {
+      throw new NotFoundException('Kendi hesabınızı silemezsiniz!');
+    }
+
     this.logger.log(`Deleting employee: ${id}`, 'EmployeeService');
     try {
       const result = await this.prisma.employee.delete({

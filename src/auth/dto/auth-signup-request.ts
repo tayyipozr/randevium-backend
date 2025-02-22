@@ -1,5 +1,12 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsEmail, IsNotEmpty, IsPhoneNumber, IsString, Length } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsBoolean,
+  IsEmail,
+  IsNotEmpty,
+  IsPhoneNumber,
+  IsString,
+  Length,
+} from 'class-validator';
 
 export class AuthSignUpRequest {
   @IsEmail()
@@ -12,7 +19,7 @@ export class AuthSignUpRequest {
   @Length(8, 15)
   @IsNotEmpty()
   @ApiProperty()
-  @IsPhoneNumber()
+  @IsPhoneNumber('TR', { message: 'Geçersiz telefon numarası!' })
   phoneNumber: string;
 
   @IsString()
