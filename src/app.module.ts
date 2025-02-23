@@ -22,7 +22,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { UploadModule } from './upload/upload.module';
 import { CommentModule } from './comment/comment.module';
 import { ConstantModule } from './constant/constant.module';
-import { BullBoardModule } from './bull/bull-board.module';
+import { BullBoardModule } from './bull-board/bull-board.module';
 
 @Module({
   imports: [

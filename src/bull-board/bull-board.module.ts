@@ -13,8 +13,6 @@ export class BullBoardModule implements OnModuleInit {
 
   onModuleInit() {
     const serverAdapter = new ExpressAdapter();
-
-    // ⚠️ Burayı, sizin kullandığınız yola göre düzenleyin:
     serverAdapter.setBasePath('/v1/api/bull-dashboard');
 
     createBullBoard({
