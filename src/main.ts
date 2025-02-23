@@ -3,11 +3,17 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { AllExceptionsFilter, PrismaExceptionFilter } from './utils';
+import * as express from 'express';
+import { ExpressAdapter } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const server = express();
+  const app = await NestFactory.create(AppModule, new ExpressAdapter(server), {
     logger: ['log', 'fatal', 'error', 'warn', 'debug', 'verbose'],
   });
+
+  (global as any).expressApp = server;
+
   app.setGlobalPrefix('/v1/api');
   //Swagger setup
   const config = new DocumentBuilder()

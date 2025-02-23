@@ -1,4 +1,6 @@
+import { InjectQueue } from '@nestjs/bull';
 import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Queue } from 'bull';
 import * as admin from 'firebase-admin';
 import * as path from 'path';
 import { CreateNotificationDto } from 'src/notification/dto/create-notification.dto';
@@ -10,6 +12,7 @@ export class FirebaseService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationService: NotificationService,
+    @InjectQueue('notificationQueue') private notificationQueue: Queue,
   ) {}
 
   onModuleInit() {
@@ -104,5 +107,37 @@ export class FirebaseService implements OnModuleInit {
       throw error;
     }
     return { message: `Token subscribed to ${topic}` };
+  }
+
+  async scheduleReminders(
+    appointmentDate: Date,
+    token: string,
+    message: string,
+  ) {
+    const now = new Date();
+    const oneHourBefore = new Date(appointmentDate.getTime() - 60 * 60 * 1000);
+    const oneDayBefore = new Date(
+      appointmentDate.getTime() - 24 * 60 * 60 * 1000,
+    );
+
+    if (oneDayBefore > now) {
+      await this.notificationQueue.add(
+        {
+          token,
+          message: `Yarın ${message} randevunuz olduğunu hatırlatırız!`,
+        },
+        { delay: oneDayBefore.getTime() - now.getTime() },
+      );
+    }
+
+    if (oneHourBefore > now) {
+      await this.notificationQueue.add(
+        {
+          token,
+          message: `1 saat sonra ${message} randevunuz olduğunu hatırlatırız!`,
+        },
+        { delay: oneHourBefore.getTime() - now.getTime() },
+      );
+    }
   }
 }

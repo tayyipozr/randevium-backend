@@ -16,12 +16,13 @@ import { AppointmentDetailModule } from './appointment-detail/appointment-detail
 import { DragonflyModule } from './dragonfly/dragonfly.module';
 import { FirebaseService } from './firebase/firebase.service';
 import { FirebaseModule } from './firebase/firebase.module';
-import { NotificationModule } from './notification/notificaiton.module';
+import { NotificationModule } from './notification/notification.module';
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { UploadModule } from './upload/upload.module';
 import { CommentModule } from './comment/comment.module';
 import { ConstantModule } from './constant/constant.module';
+import { BullBoardModule } from './bull/bull-board.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ConstantModule } from './constant/constant.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    BullBoardModule,
     AuthModule,
     PrismaModule,
     CategoryModule,

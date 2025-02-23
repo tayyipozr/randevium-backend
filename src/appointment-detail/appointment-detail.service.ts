@@ -183,6 +183,11 @@ export class AppointmentDetailService {
     );
 
     try {
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
+      });
       const appointmentDetails: string[] = [];
       for (let i = 0; i < models.length; i++) {
         const appointmentDetail = await this.prisma.appointmentDetail.create({
@@ -197,6 +202,31 @@ export class AppointmentDetailService {
             },
           },
         });
+
+        const serviceDetails = await this.prisma.serviceDetails.findMany({
+          where: {
+            id: {
+              in: models[i].serviceDetails,
+            },
+          },
+          include: {
+            service: true,
+            employee: {
+              include: {
+                company: true,
+              },
+            },
+          },
+        });
+
+        const message = `${serviceDetails.map((e) => e.service.name).join(', ')} ${serviceDetails.length > 1 ? 'hizmetleri' : 'hizmeti'} için ${serviceDetails[0].employee.company.name} işletmesinde`;
+
+        this.firebase.scheduleReminders(
+          new Date(models[i].appointmentDateTime),
+          user.token,
+          message,
+        );
+
         appointmentDetails.push(appointmentDetail.id);
       }
 
