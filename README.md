@@ -66,12 +66,14 @@ Randevium Backend is a comprehensive appointment management system built with Ne
 ## Project Setup
 
 1. Install dependencies:
+
 ```bash
 $ npm install
 ```
 
 2. Environment Setup:
-Create a `.env` file in the root directory with:
+   Create a `.env` file in the root directory with:
+
 ```bash
 DATABASE_URL="postgresql://user:password@localhost:5432/db_name"
 JWT_AT_SECRET="your-access-token-secret"
@@ -81,6 +83,7 @@ NODE_ENV="development"  # Use "production" for production environment
 ```
 
 3. Docker Services:
+
 ```bash
 # Start all services
 $ docker-compose up -d
@@ -133,6 +136,17 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+## bull module to queue notifications (Randevu hatırlatma bildirimi)
+
+BullMQ < - > NestJS
+npm install @nestjs/bull bull redis
+npm install @bull-board/api @bull-board/express
+
+Redis'i çalıştır
+docker run --name redis -p 6379:6379 -d redis
+
+/v1/api/bull-dashboard (Monitoring)
+
 ## Project Structure
 
 ```
@@ -150,11 +164,13 @@ src/
 ## Authentication Flow
 
 1. Access Tokens (short-lived)
+
    - 50-minute expiration
    - JWT-based
    - Used for API authentication
 
 2. Refresh Tokens (long-lived)
+
    - 7-day expiration
    - Secure rotation on each use
    - Blacklisted after use
@@ -171,6 +187,7 @@ src/
 The application includes a custom logging service with:
 
 - Log Levels:
+
   - INFO: General application information
   - ERROR: Application errors with stack traces
   - WARN: Warning messages
@@ -203,6 +220,7 @@ The API documentation is available via Swagger UI at `/api` when running the app
 ## Database Schema
 
 Key entities:
+
 - Users
 - Roles
 - Categories

@@ -4,6 +4,6 @@ import { DragonflyService } from './dragonfly.service';
 @Global()
 @Module({
   providers: [DragonflyService],
-  exports: [DragonflyService]
+  exports: [DragonflyService],
 })
-export class DragonflyModule { }
+export class DragonflyModule {}

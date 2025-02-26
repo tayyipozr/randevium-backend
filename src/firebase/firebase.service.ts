@@ -1,81 +1,143 @@
+import { InjectQueue } from '@nestjs/bull';
 import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Queue } from 'bull';
 import * as admin from 'firebase-admin';
 import * as path from 'path';
+import { CreateNotificationDto } from 'src/notification/dto/create-notification.dto';
+import { NotificationService } from 'src/notification/notification.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class FirebaseService implements OnModuleInit {
-    constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationService: NotificationService,
+    @InjectQueue('notificationQueue') private notificationQueue: Queue,
+  ) {}
 
-    onModuleInit() {
-        // Check if Firebase is already initialized
-        if (!admin.apps.length) {
-            const serviceAccountPath = path.join(process.cwd(), 'firebase', 'randevium-test-firebase.json');
-            admin.initializeApp({
-                credential: admin.credential.cert(serviceAccountPath),
-            });
-        }
+  onModuleInit() {
+    // Check if Firebase is already initialized
+    if (!admin.apps.length) {
+      const serviceAccountPath = path.join(
+        process.cwd(),
+        'firebase',
+        'randevium-test-firebase.json',
+      );
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccountPath),
+      });
+    }
+  }
+
+  async sendNotification(
+    token: string,
+    title: string,
+    body: string,
+    appointmentId?: string,
+  ) {
+    try {
+      const message = {
+        notification: { title, body },
+        token,
+      };
+
+      const response = await admin.messaging().send(message);
+
+      const user = await this.prisma.user.findFirst({
+        where: {
+          token: token,
+        },
+      });
+
+      if (!!user) {
+        const newNotif = new CreateNotificationDto();
+        newNotif.title = title;
+        newNotif.message = body;
+        newNotif.userId = user.id;
+        newNotif.appointmentId = appointmentId;
+
+        this.notificationService.create(newNotif);
+      }
+      console.log('FCM Message Sent:', response);
+      return response;
+    } catch (error) {
+      console.error('Error sending FCM message:', error);
+      throw error;
+    }
+  }
+
+  async sendNotificationToTopic(topic: string, title: string, body: string) {
+    try {
+      const message = {
+        notification: { title, body },
+        topic,
+      };
+
+      const response = await admin.messaging().send(message);
+      console.log('FCM Topic Message Sent:', response);
+      return response;
+    } catch (error) {
+      console.error('Error sending FCM topic message:', error);
+      throw error;
+    }
+  }
+
+  async subscribeToTopic(userId: string, token: string, topic: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (user) {
+      await this.prisma.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          token: token,
+        },
+      });
     }
 
-    async sendNotification(token: string, title: string, body: string) {
-        try {
-            const message = {
-                notification: { title, body },
-                token,
-            };
+    try {
+      await admin.messaging().subscribeToTopic(token, topic);
+    } catch (error) {
+      console.error('Error subscribing to topic:', error);
+      throw error;
+    }
+    return { message: `Token subscribed to ${topic}` };
+  }
 
-            const response = await admin.messaging().send(message);
-            console.log('FCM Message Sent:', response);
-            return response;
-        } catch (error) {
-            console.error('Error sending FCM message:', error);
-            throw error;
-        }
+  async scheduleReminders(
+    appointmentDate: Date,
+    token: string,
+    message: string,
+  ) {
+    const now = new Date();
+    const oneHourBefore = new Date(appointmentDate.getTime() - 60 * 60 * 1000);
+    const oneDayBefore = new Date(
+      appointmentDate.getTime() - 24 * 60 * 60 * 1000,
+    );
+
+    if (oneDayBefore > now) {
+      await this.notificationQueue.add(
+        {
+          token,
+          message: `Yarın ${message} randevunuz olduğunu hatırlatırız!`,
+        },
+        { delay: oneDayBefore.getTime() - now.getTime() },
+      );
     }
 
-    async sendNotificationToTopic(topic: string, title: string, body: string) {
-        try {
-            const message = {
-                notification: { title, body },
-                topic,
-            };
-
-            const response = await admin.messaging().send(message);
-            console.log('FCM Topic Message Sent:', response);
-            return response;
-        } catch (error) {
-            console.error('Error sending FCM topic message:', error);
-            throw error;
-        }
+    if (oneHourBefore > now) {
+      await this.notificationQueue.add(
+        {
+          token,
+          message: `1 saat sonra ${message} randevunuz olduğunu hatırlatırız!`,
+        },
+        { delay: oneHourBefore.getTime() - now.getTime() },
+      );
     }
-
-    async subscribeToTopic(userId: string, token: string, topic: string) {
-        const user = await this.prisma.user.findUnique({
-            where: {
-                id: userId,
-                NOT: {
-                    token: token
-                }
-            }
-        });
-
-        if (user) {
-            await this.prisma.user.update({
-                where: {
-                    id: userId
-                },
-                data: {
-                    token: token
-                }
-            });
-        }
-
-        try {
-            await admin.messaging().subscribeToTopic(token, topic);
-        } catch (error) {
-            console.error('Error subscribing to topic:', error);
-            throw error;
-        }
-        return { message: `Token subscribed to ${topic}` };
-    }
+  }
 }

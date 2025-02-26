@@ -5,20 +5,23 @@ import { ServiceDetailsUpdateModel } from './model';
 
 @Controller('service-detail')
 export class ServiceDetailsController {
-    constructor(private serviceDetailsService: ServiceDetailsService) { }
+  constructor(private serviceDetailsService: ServiceDetailsService) {}
 
-    @Post()
-    createServiceDetail(@Body() model: ServiceDetailsRequestModel) {
-        return this.serviceDetailsService.createServiceDetail(model);
-    }
+  @Post()
+  createServiceDetail(@Body() model: ServiceDetailsRequestModel) {
+    return this.serviceDetailsService.createServiceDetail(model);
+  }
 
-    @Get('employee/:employeeId')
-    getEmployeeServiceDetails(@Param('employeeId') employeeId: string) {
-        return this.serviceDetailsService.findByEmployee(employeeId);
-    }
+  @Get('employee/:employeeId')
+  getEmployeeServiceDetails(@Param('employeeId') employeeId: string) {
+    return this.serviceDetailsService.findByEmployee(employeeId);
+  }
 
-    @Put(':id')
-    updateServiceDetail(@Param('id') id: string, @Body() model: ServiceDetailsUpdateModel) {
-        return this.serviceDetailsService.updateServiceDetail(id, model);
-    }
+  @Put(':id')
+  updateServiceDetail(
+    @Param('id') id: string,
+    @Body() model: ServiceDetailsUpdateModel,
+  ) {
+    return this.serviceDetailsService.updateServiceDetail(id, model);
+  }
 }

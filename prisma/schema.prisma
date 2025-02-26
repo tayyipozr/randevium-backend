@@ -19,6 +19,7 @@ model User {
   updatedAt   DateTime    @updatedAt
   email       String      @unique
   phoneNumber String      @unique
+  status      String      @default("1") @db.VarChar(1)  // 1 - verified 2- unverified 3-blocked
   hash        String
   hashedRt    String?
   firstName   String?
@@ -30,9 +31,12 @@ model User {
   roles             Role[]
   appointments      Appointment[]
   favoriteCompanies Company[]
+  comments          CommentModel[]
+  notifications     NotificationModel[]
 
   employee Employee?
   Address  Address?
+
 }
 
 model Role {
@@ -65,6 +69,7 @@ model Company {
   employees      Employee[]
   category       Category[]
   favoritedUsers User[]
+  comments       CommentModel[]
 }
 
 model Employee {
@@ -79,11 +84,11 @@ model Employee {
   images         EmployeeImage[]
   serviceDetails ServiceDetails[]
 
-  companyId String  @db.Uuid
-  company   Company @relation(fields: [companyId], references: [id])
+  companyId String?  @db.Uuid
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
 
-  userId String @unique @db.Uuid
-  user   User   @relation(fields: [userId], references: [id])
+  userId String? @unique @db.Uuid
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model Service {
@@ -104,13 +109,14 @@ model ServiceDetails {
   cost        Decimal
   duration    Int      @db.SmallInt
   isRecurred  Boolean  @default(false)
+  canBeGroup  Boolean  @default(false)
 
   // Relations
   serviceId String  @db.Uuid
   service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
   employeeId        String              @db.Uuid
-  employee          Employee            @relation(fields: [employeeId], references: [id])
+  employee          Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   AppointmentDetail AppointmentDetail[]
 
   @@unique([serviceId, employeeId])
@@ -143,15 +149,16 @@ model WorkingEmployeeDays {
   id        String  @id @default(uuid()) @db.Uuid
   day       String  @db.VarChar(1)
   status    Boolean
-  startTime String  @db.VarChar(5)
-  endTime   String  @db.VarChar(5)
+  startTime String?  @db.VarChar(5)
+  endTime   String?  @db.VarChar(5)
 
-  employeeSettings   EmployeeSettings @relation(fields: [employeeSettingsId], references: [id])
+  employeeSettings   EmployeeSettings @relation(fields: [employeeSettingsId], references: [id], onDelete: Cascade)
   employeeSettingsId String           @db.Uuid
 }
 
 model Appointment {
   id            String   @id @default(uuid()) @db.Uuid
+  creatorUserId String?   @db.Uuid
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   totalPrice    Decimal
@@ -159,12 +166,16 @@ model Appointment {
 
   users             User[]
   appointmentDetail AppointmentDetail[]
+  notifications     NotificationModel[]
+  comments          CommentModel[]
 }
 
 model AppointmentDetail {
   id                  String   @id @default(uuid()) @db.Uuid
+  creatorUserId       String?   @db.Uuid
   appointmentStatus   String   @default("0") @db.VarChar(1)
   appointmentDateTime DateTime
+  hasPaymentMade      Boolean  @default(false)
 
   appointmentId String      @db.Uuid
   appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
@@ -189,7 +200,7 @@ model EmployeeSettings {
   id String @id @default(uuid()) @db.Uuid
 
   employeeId String   @unique @db.Uuid
-  employee   Employee @relation(fields: [employeeId], references: [id])
+  employee   Employee @relation(fields: [employeeId], references: [id],  onDelete: Cascade)
 
   workingDays WorkingEmployeeDays[]
 }
@@ -291,4 +302,46 @@ model Location {
   lng      Float
   adresses CompanyAddress[]
   Address  Address[]
+}
+
+model NotificationModel {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now())
+  title     String   @db.VarChar(150)
+  message   String   @db.VarChar(150)
+  isReaded  Boolean  @default(false)
+
+  userId    String    @db.Uuid
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  appointmentId    String?    @db.Uuid
+  appointment      Appointment?     @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+}
+
+model CommentModel {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now())
+  comment   String?   @db.VarChar(150)
+  star      String   @db.VarChar(1)
+
+  appoinmentId String    @db.Uuid
+  appoinment   Appointment? @relation(fields: [appoinmentId], references: [id], onDelete: Cascade)
+
+  companyId String?    @db.Uuid
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  userId    String    @db.Uuid
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  images    CommentImage[] 
+}
+
+model CommentImage {
+  id        String   @id @default(uuid()) @db.Uuid
+  imageUrl  String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  commentId String  @db.Uuid
+  comment   CommentModel @relation(fields: [commentId], references: [id], onDelete: Cascade)
 }

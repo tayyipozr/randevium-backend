@@ -1,31 +1,41 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { Roles } from 'src/auth/decorator';
 import { Role } from 'src/auth/enum';
 import { CategoryService } from './category.service';
 import { CategoryRequestModel, CategoryUpdateModel } from './model';
 
 @Controller('category')
-@Roles(Role.Admin)
 export class CategoryController {
-    constructor(private categoryService: CategoryService) { }
+  constructor(private categoryService: CategoryService) {}
 
-    @Get()
-    getCategories() {
-        return this.categoryService.getCategories();
-    }
+  @Get()
+  getCategories() {
+    return this.categoryService.getCategories();
+  }
 
-    @Post()
-    createCategories(@Body() model: CategoryRequestModel) {
-        return this.categoryService.createCategories(model);
-    }
+  @Post()
+  @Roles(Role.Admin)
+  createCategories(@Body() model: CategoryRequestModel) {
+    return this.categoryService.createCategories(model);
+  }
 
-    @Put(':id')
-    updateCategory(@Param('id') id: string, @Body() model: CategoryUpdateModel) {
-        return this.categoryService.updateCategory(id, model);
-    }
+  @Put(':id')
+  @Roles(Role.Admin)
+  updateCategory(@Param('id') id: string, @Body() model: CategoryUpdateModel) {
+    return this.categoryService.updateCategory(id, model);
+  }
 
-    @Delete(':id')
-    deleteCategory(@Param('id') id: string){
-        return this.categoryService.deleteCategory(id);
-    }
+  @Delete(':id')
+  @Roles(Role.Admin)
+  deleteCategory(@Param('id') id: string) {
+    return this.categoryService.deleteCategory(id);
+  }
 }

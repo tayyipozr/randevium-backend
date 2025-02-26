@@ -1,4 +1,4 @@
-import { Logger, MiddlewareConsumer, Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { LoggerMiddleware } from './utils/logger/logger.middleware';
 import { PrismaModule } from './prisma/prisma.module';
@@ -16,12 +16,45 @@ import { AppointmentDetailModule } from './appointment-detail/appointment-detail
 import { DragonflyModule } from './dragonfly/dragonfly.module';
 import { FirebaseService } from './firebase/firebase.service';
 import { FirebaseModule } from './firebase/firebase.module';
+import { NotificationModule } from './notification/notification.module';
+import { join } from 'path';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { UploadModule } from './upload/upload.module';
+import { CommentModule } from './comment/comment.module';
+import { ConstantModule } from './constant/constant.module';
+import { BullBoardModule } from './bull-board/bull-board.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({
-    isGlobal: true,
-  }), AuthModule, PrismaModule, CategoryModule, CompanyModule, ServiceModule, EmployeeModule, ServiceDetailsModule, AppointmentModule, AppointmentDetailModule, DragonflyModule, FirebaseModule],
-  providers: [{ provide: APP_GUARD, useClass: AtGuard }, { provide: APP_GUARD, useClass: RolesGuard }, FirebaseService]
+  imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+    }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    BullBoardModule,
+    AuthModule,
+    PrismaModule,
+    CategoryModule,
+    CompanyModule,
+    ServiceModule,
+    EmployeeModule,
+    ServiceDetailsModule,
+    AppointmentModule,
+    AppointmentDetailModule,
+    DragonflyModule,
+    FirebaseModule,
+    NotificationModule,
+    UploadModule,
+    CommentModule,
+    ConstantModule,
+  ],
+  providers: [
+    { provide: APP_GUARD, useClass: AtGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+    FirebaseService,
+  ],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

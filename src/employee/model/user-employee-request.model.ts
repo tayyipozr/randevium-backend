@@ -1,5 +1,12 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsEmail, IsNotEmpty, IsPhoneNumber, IsString, Length } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsBoolean,
+  IsEmail,
+  IsNotEmpty,
+  IsPhoneNumber,
+  IsString,
+  Length,
+} from 'class-validator';
 
 export class UserEmployeeRequestModel {
   @IsEmail()
@@ -12,7 +19,7 @@ export class UserEmployeeRequestModel {
   @Length(8, 15)
   @IsNotEmpty()
   @ApiProperty()
-  @IsPhoneNumber()
+  @IsPhoneNumber('TR')
   phoneNumber: string;
 
   @IsString()

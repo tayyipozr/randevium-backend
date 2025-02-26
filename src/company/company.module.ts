@@ -6,6 +6,6 @@ import { LoggerModule } from 'src/utils';
 @Module({
   imports: [LoggerModule],
   controllers: [CompanyController],
-  providers: [CompanyService]
+  providers: [CompanyService],
 })
-export class CompanyModule { }
+export class CompanyModule {}

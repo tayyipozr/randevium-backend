@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import { AppointmentDetailService } from './appointment-detail.service';
 import { GetUser } from 'src/auth/decorator';
 import { LoggerService } from 'src/utils';
@@ -9,6 +9,19 @@ export class AppointmentDetailController {
     private readonly appointmentDetailService: AppointmentDetailService,
     private readonly logger: LoggerService,
   ) {}
+
+  @Get('detail/:id')
+  async getByAppoinmentDetailId(
+    @Param('appoinmentDetailId') appoinmentDetailId: string,
+  ) {
+    this.logger.log(
+      `Fetching appointment details for appoinmentDetailId: ${appoinmentDetailId}`,
+      'AppointmentDetailController',
+    );
+    return await this.appointmentDetailService.getByAppoinmentDetailId(
+      appoinmentDetailId,
+    );
+  }
 
   @Get('user')
   async getByUserId(@GetUser('id') userId: string) {
@@ -35,5 +48,35 @@ export class AppointmentDetailController {
       'AppointmentDetailController',
     );
     return await this.appointmentDetailService.getByEmployeeId(employeeId);
+  }
+
+  @Put('update-payment-status')
+  async updatePaymentStatus(
+    @Body('appoinmentDetailId') appoinmentDetailId: string,
+    @Body('hasPaymentMade') hasPaymentMade: boolean,
+  ) {
+    this.logger.log(
+      `Updating appointment update-payment-status: ${appoinmentDetailId}`,
+      'AppointmentDetailController',
+    );
+    return await this.appointmentDetailService.updatePaymentStatus(
+      appoinmentDetailId,
+      hasPaymentMade,
+    );
+  }
+
+  @Post('/:appointmentDetailId/cancel')
+  async cancelAppointmentDetail(
+    @GetUser('id') userId: string,
+    @Param('appointmentDetailId') appointmentDetailId: string,
+  ) {
+    this.logger.log(
+      `cancel a appointment detaik for user: ${userId} and appointmentDetailId: ${appointmentDetailId}`,
+      'AppointmentDetailController',
+    );
+    return await this.appointmentDetailService.cancelAppointmentDetail(
+      userId,
+      appointmentDetailId,
+    );
   }
 }

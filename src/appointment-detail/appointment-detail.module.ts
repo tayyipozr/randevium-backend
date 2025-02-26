@@ -5,6 +5,6 @@ import { LoggerService } from 'src/utils';
 
 @Module({
   providers: [AppointmentDetailService, LoggerService],
-  controllers: [AppointmentDetailController]
+  controllers: [AppointmentDetailController],
 })
-export class AppointmentDetailModule { }
+export class AppointmentDetailModule {}
